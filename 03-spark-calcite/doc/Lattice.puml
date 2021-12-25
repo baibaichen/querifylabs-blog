@@ -1,0 +1,26 @@
+@startuml
+!theme toy
+
+namespace materialize {
+  abstract class LatticeNode {
+    +LatticeTable table
+    -ImmutableList<LatticeChildNode> children
+  }
+  note left: Source relation of a lattice.
+
+  class LatticeRootNode {
+    ImmutableList<LatticeNode> descendants
+  }
+  note bottom: Root node in a Lattice. It has no parent.
+
+  class LatticeChildNode {
+    + LatticeNode parent
+  }
+  note bottom: Non-root node in a Lattice.
+
+  LatticeNode <|-- LatticeChildNode
+  LatticeNode <|-- LatticeRootNode
+  LatticeChildNode::parent "1" o--> "1" LatticeNode: parent
+  LatticeRootNode::descendants "1" o--> "n" LatticeNode: child
+}
+@enduml

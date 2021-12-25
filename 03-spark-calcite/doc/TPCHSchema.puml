@@ -1,0 +1,52 @@
+@startuml
+map lineitem {
+ L_ORDERKEY => **PK** FK (Foreign Key to **O_ORDERKEY**)
+ L_PARTKEY => FK
+ L_SUPPKEY => FK
+ L_LINENUMBER => **PK**
+}
+
+map orders {
+  O_ORDERKEY => **PK** (值范围是 1 到 SF*150,000)
+  O_CUSTKEY  => FK (Foreign Key to **C_CUSTKEY**)
+}
+
+map customer {
+  C_CUSTKEY => **PK** (值范围是 1 到 SF*150,000)
+  C_NATIONKEY => FK (Foreign Key to **N_NATIONKEY**)
+}
+
+map part {
+ P_PARTKEY => **PK**
+}
+note bottom: 零件信息
+
+map supplier {
+ S_SUPPKEY => **PK** (值范围是 1 到 SF*10,000)
+ S_NATIONKEY => FK
+}
+note bottom: 供货商信息
+
+map partsupp {
+PS_PARTKEY => **PK** FK
+PS_SUPPKEY => **PK** FK
+}
+
+map nation {
+  N_NATIONKEY => **PK** (25 个国家)
+  N_REGIONKEY => FK (Foreign Key to **R_REGIONKEY** )
+}
+
+map region{
+ R_REGIONKEY => **PK** (5 个地区)
+}
+nation::N_REGIONKEY *---> region::R_REGIONKEY
+orders::O_CUSTKEY *---> customer::C_CUSTKEY
+customer::C_NATIONKEY *---> nation::N_NATIONKEY
+lineitem::L_ORDERKEY  *---> orders::O_ORDERKEY
+supplier::S_NATIONKEY *---> nation::N_NATIONKEY
+lineitem::L_PARTKEY *--->  partsupp::PS_PARTKEY
+lineitem::L_SUPPKEY *--->  partsupp::PS_SUPPKEY
+partsupp::PS_PARTKEY *---> part::P_PARTKEY
+partsupp::PS_SUPPKEY *---> supplier::S_SUPPKEY
+@enduml

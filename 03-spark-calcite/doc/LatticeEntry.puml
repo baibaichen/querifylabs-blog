@@ -1,0 +1,24 @@
+@startuml
+!theme toy
+
+interface Table
+abstract Entry {}
+class LatticeEntryImpl{}
+
+Entry <|-- LatticeEntry
+Entry <|-- TableEntry
+LatticeEntry <|--  LatticeEntryImpl
+LatticeEntry o-> TableEntry : getStarTable >
+TableEntry *-> Table
+LatticeEntryImpl ..> StarTable: create >
+Table <|-- AbstractTable
+AbstractTable <|--StarTable
+
+StarTable ..> Rel.StarTableScan: create >
+
+
+namespace Rel {
+  TableScan <|-- StarTableScan
+}
+
+@enduml

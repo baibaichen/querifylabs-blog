@@ -1,0 +1,28 @@
+@startuml
+!theme toy
+
+abstract class AbstractRelOptPlanner
+interface RelOptPlanner
+class VolcanoPlanner {
+}
+class HepPlanner {
+}
+class RelOptMaterialization {
+  RelNode tableRel
+  RelNode queryRel
+  RelOptTable starRelOptTable
+  StarTable starTable
+}
+class RelOptLattice{
+  ~Lattice lattice
+  ~RelOptTable starRelOptTable
+
+  +getAggregate()
+}
+RelOptPlanner <|-- AbstractRelOptPlanner
+RelOptPlanner "1" o--> "n" RelOptMaterialization
+RelOptPlanner "1" o--> "n" RelOptLattice
+AbstractRelOptPlanner <|-- VolcanoPlanner
+AbstractRelOptPlanner <|-- HepPlanner
+
+@enduml

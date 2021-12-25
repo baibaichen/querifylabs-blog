@@ -1,0 +1,59 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+class TileKey {
+  Lattice lattice
+  ImmutableBitSet dimensions
+  ImmutableList<Lattice.Measure> measures
+}
+
+class MaterializationKey{
+ UUID uuid
+}
+
+namespace MaterializationActor {
+  map keyMap {
+   MaterializationKey => Materialization
+  }
+  map keyBySql {
+    QueryKey => MaterializationKey
+  }
+  map keyByTile {
+    TileKey => MaterializationKey
+  }
+
+  class QueryKey{
+    String sql
+    CalciteSchema schema
+    List<String> path
+  }
+  class Materialization {
+    ~MaterializationKey key
+    ~CalciteSchema rootSchema
+    ~TableEntry materializedTable
+    ~String sql
+    ~RelDataType rowType
+    ~List<String> viewSchemaPath
+  }
+}
+class MaterializationService {
+  MaterializationActor actor
+  DefaultTableFactory tableFactory
+}
+
+namespace Prepare {
+  class Materialization {
+    TableEntry materializedTable
+    String sql
+    RelNode tableRel
+    RelNode queryRel
+    RelOptTable starRelOptTable
+  }
+}
+TileKey *---> MaterializationActor.keyByTile::TileKey
+MaterializationActor.keyByTile::MaterializationKey *--->  MaterializationKey
+MaterializationActor.keyBySql::MaterializationKey *--->  MaterializationKey
+MaterializationKey  *---> MaterializationActor.keyMap::MaterializationKey
+MaterializationActor.keyMap::Materialization *---> MaterializationActor.Materialization
+
+@enduml

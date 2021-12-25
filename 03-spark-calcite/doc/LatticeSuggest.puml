@@ -1,0 +1,89 @@
+@startuml
+!theme toy
+namespace materialize {
+  class LatticeSpace {
+    Map<List<String>, LatticeTable> tableMap
+    Graph<LatticeTable, Step> g
+    ~LatticeTable register(RelOptTable t)
+    ~Step addEdge(LatticeTable source,\nLatticeTable target,\nList<IntPair> keys)
+  }
+  note bottom: Space within which lattices exist
+
+  class LatticeTable {
+    RelOptTable t
+    String alias
+  }
+  note bottom: Table registered in the graph.
+  LatticeSpace::g "1" o--> "n" LatticeTable
+}
+namespace LatticeSuggester{
+  abstract Frame{
+     List<Hop> hops;
+     List<MutableMeasure> measures;
+     Set<TableRef> tableRefs;
+     int columnCount;
+  }
+  note top: Information about the parent of fields from a relational expression.
+
+  class Hop {
+      SingleTableColRef source
+      SingleTableColRef target
+  }
+  note right: A hop is a join condition.
+
+  interface SingleTableColRef{}
+  class BaseColRef{
+  TableRef t
+  int c
+  }
+  note bottom: Reference to a base column.
+
+  abstract ColRef
+  note left: Column reference
+
+  class DerivedColRef{
+   List<TableRef> tableRefs
+   RexNode e
+   String alias
+  }
+  note bottom: Reference to a derived column\n(that is, an expression).
+
+  class  TableRef {
+   LatticeTable table
+   int ordinalInQuery
+  }
+  note bottom: Use of a table within a query.\nA table can be used more than once.
+
+  class MutableMeasure{
+      SqlAggFunction aggregate
+      boolean distinct
+      ~List<ColRef> arguments
+      String name
+  }
+  note left: An aggregate call.\nBecomes a measure in the final lattice.
+
+  class Query{
+    LatticeSpace space
+    Map<Integer, TableRef> tableRefs
+    int stepRefCount
+  }
+  note bottom: Holds state for a particular query graph.\nIn particular table and step references count from zero each query.
+
+  ColRef <|-- BaseColRef
+  SingleTableColRef <|-- BaseColRef
+  ColRef <|-- DerivedColRef
+  BaseColRef::t "1" o--> "1" TableRef
+  DerivedColRef::tableRefs "1" o--> "n" TableRef
+  Frame::hops "1" o--> "n" Hop
+  Frame::tableRefs "1" o--> "n" TableRef
+  Query::tableMap "1" o--> "n" TableRef
+  Frame::measures "1" o--> "n" MutableMeasure
+  MutableMeasure::arguments "1" o--> "n" ColRef
+  Hop "1" o-> "2" BaseColRef
+}
+interface RelOptTable
+note bottom: Represents a relational dataset in a RelOptSchema.\nIt has methods to describe and implement itself.
+LatticeSuggester.TableRef "1" o--> "1" materialize.LatticeTable : table
+LatticeSuggester.Query "1" o--> "1" materialize.LatticeSpace : space
+materialize.LatticeTable "1" o--> "1" RelOptTable : t
+@enduml

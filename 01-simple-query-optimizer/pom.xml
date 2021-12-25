@@ -15,9 +15,9 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-        <calcite.version>1.25.0</calcite.version>
-        <guava.version>30.0-jre</guava.version>
-        <junit.version>4.11</junit.version>
+        <calcite.version>1.28.0</calcite.version>
+        <guava.version>31.0.1-jre</guava.version>
+        <junit.version>5.8.1</junit.version>
     </properties>
 
     <dependencies>
@@ -34,11 +34,19 @@
         </dependency>
 
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
             <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>org.apache.calcite</groupId>
+            <artifactId>calcite-plus</artifactId>
+            <version>${calcite.version}</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
     <build>

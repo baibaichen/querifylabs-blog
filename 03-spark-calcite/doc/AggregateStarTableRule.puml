@@ -1,0 +1,35 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+autonumber
+
+Planner -> AggregateStarTableRule: onMatch
+activate AggregateStarTableRule #FFBBBB
+AggregateStarTableRule -> Planner: getLattice(RelOptTable)
+Planner --> AggregateStarTableRule: return current Lattice
+AggregateStarTableRule -> RelOptLattice: getAggregate
+RelOptLattice -> MaterializationService: defineTile
+
+alt hasCache
+
+else defineMaterialization(read from schema)
+  activate MaterializationService #DarkSalmon
+  MaterializationService ->  CalciteSchema: getTable
+  CalciteSchema --> MaterializationService: return TableEntry
+
+else defineMaterialization(create table)
+  MaterializationService ->  DefaultTableFactory: createTable
+  DefaultTableFactory --> MaterializationService: return Table
+  MaterializationService -> CalciteSchema: create TableEntry
+  CalciteSchema --> MaterializationService: return TableEntry
+end
+MaterializationService -> MaterializationService: return MaterializationKey
+MaterializationService -> MaterializationService: put cache
+deactivate MaterializationService
+
+MaterializationService --> RelOptLattice: return\nPair<TableEntry, TileKey>
+
+RelOptLattice --> AggregateStarTableRule: return\nPair<TableEntry, TileKey>
+AggregateStarTableRule --> Planner: Done
+deactivate AggregateStarTableRule
+@enduml
