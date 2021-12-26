@@ -1,6 +1,7 @@
 package io.apache.kylin.planner;
 
 import com.google.common.collect.ImmutableList;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.calcite.adapter.java.JavaTypeFactory;
 import org.apache.calcite.avatica.util.Casing;
 import org.apache.calcite.config.CalciteConnectionConfig;
@@ -30,6 +31,7 @@ import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlOperatorTable;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.parser.SqlParser;
 import org.apache.calcite.sql.util.SqlOperatorTables;
 import org.apache.calcite.sql.validate.SqlValidator;
@@ -47,10 +49,9 @@ import java.util.List;
 import java.util.Properties;
 
 import static io.apache.kylin.planner.rules.KylinRules.KYLIN_RULES;
-import static java.util.Objects.requireNonNull;
 
+@Slf4j
 public class Optimizer {
-
     private final CalciteConnectionConfig config;
     private final SqlValidator validator;
     private final SqlToRelConverter converter;
@@ -88,9 +89,6 @@ public class Optimizer {
         CalciteSchema rootSchema = CalciteSchema.createRootSchema(false, false);
         SchemaPlus root = rootSchema.plus();
         SchemaPlus defaultSchema = root.add(name, schema);
-//        if (lattices.size() > 0) {
-//            defaultSchema.add("kylinstar", lattices.get(0));
-//        }
 
         Prepare.CatalogReader catalogReader = new CalciteCatalogReader(rootSchema,
           CalciteSchema.from(defaultSchema).path(null),
@@ -133,7 +131,7 @@ public class Optimizer {
         return new Optimizer(config, validator, converter, planner, relOptLattices);
     }
 
-    public SqlNode parse(String sql) throws Exception {
+    public SqlNode parse(String sql) throws SqlParseException {
         SqlParser.Config config1 = SqlParser.config()
           .withCaseSensitive(config.caseSensitive())
           .withUnquotedCasing(config.unquotedCasing())
@@ -167,7 +165,7 @@ public class Optimizer {
         if (dumpGraphviz) {
             StringWriter sw = new StringWriter();
             DumperWrapper.dumpGraphviz(planner, new PrintWriter(sw));
-            System.out.println(sw);
+            log.info("\n" + sw);
         }
         return optimized;
     }

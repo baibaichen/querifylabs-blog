@@ -15,11 +15,8 @@
  * limitations under the License.
  */
 package io.apache.kylin.planner.rules;
-
-import io.apache.kylin.planner.debug.Debugger;
 import io.apache.kylin.planner.nodes.KylinSort;
 import io.apache.kylin.planner.nodes.LogicalSpark;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.calcite.plan.Convention;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.convert.ConverterRule;
@@ -32,7 +29,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @see KylinRules#KYLIN_SORT_RULE
  */
-@Slf4j
 class KylinSortRule extends ConverterRule {
   /** Default configuration. */
   public static final Config DEFAULT_CONFIG = Config.INSTANCE

@@ -35,7 +35,7 @@ class TPCHTest {
         print("AFTER CONVERSION", convert);
 
         RelTraitSet traitSet = convert.getTraitSet().replace(convention);
-        RelNode optimizerRelTree = optimizer.optimize(convert,traitSet, false);
+        RelNode optimizerRelTree = optimizer.optimize(convert, traitSet, true);
         print("AFTER OPTIMIZATION", optimizerRelTree);
     }
 
@@ -64,18 +64,24 @@ class TPCHTest {
                 () -> runSQL(Util.QUERIES.get(i), convention))));
     }
 
-    @Test
-    void testSimple() throws Exception {
-        // runSQL("select * from tpch.lineitem where l_shipdate <= date '1998-12-01'", LogicalSpark.INSTANCE); /*  1 */
-        // runSQL("select l_linestatus from tpch.lineitem where l_shipdate <= date '1998-12-01'",
-        //  LogicalSpark.INSTANCE);                                                                           /*  2 */
-        // runSQL("select min(l_linestatus) from tpch.lineitem where l_shipdate <= date '1998-12-01'",
-        //  LogicalSpark.INSTANCE);                                                                           /*  3 */
-        // runSQL("select min(l_linestatus) from tpch.lineitem where l_shipdate <= date '1998-12-01' order by 1",
-        //  LogicalSpark.INSTANCE);                                                                           /*  4 */
+    static final String SCAN_0 = "select * from tpch.lineitem";
+    static final String FILTER_1 = "select * from tpch.lineitem where l_shipdate <= date '1998-12-01'";
+    static final String PROJECT_2 = "select l_linestatus from tpch.lineitem where l_shipdate <= date '1998-12-01'";
+    static final String AGGREGATE_3 = "select min(l_linestatus) from tpch.lineitem where l_shipdate <= date '1998-12-01'";
+    static final String SORT_4 = "select min(l_linestatus) from tpch.lineitem where l_shipdate <= date '1998-12-01' order by 1";
+    static final String LIMIT_5 = "select * from tpch.lineitem where l_shipdate <= date '1998-12-01' limit 100";
 
-        runSQL("select * from tpch.lineitem where l_shipdate <= date '1998-12-01' limit 100", LogicalSpark.INSTANCE); /*  1 */
+    static final List<String> SimpleSQLs = ImmutableList.of(
+      SCAN_0,
+      FILTER_1,
+      PROJECT_2,
+      AGGREGATE_3,
+      SORT_4,
+      LIMIT_5
+    );
 
-        // runSQL(Util.QUERIES.get(1), EnumerableConvention.INSTANCE);
+    @TestFactory
+    Stream<DynamicTest> testSimple() {
+        return SimpleSQLs.stream().map(sql -> dynamicTest(sql, () -> runSQL(sql, LogicalSpark.INSTANCE)));
     }
 }
