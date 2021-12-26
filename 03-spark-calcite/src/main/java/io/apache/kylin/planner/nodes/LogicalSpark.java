@@ -7,7 +7,7 @@ import org.apache.calcite.plan.RelTrait;
 import org.apache.calcite.plan.RelTraitDef;
 
 /** Calling convention for relational operations that occur in Kylin. */
-public enum KylinConvention implements Convention {
+public enum LogicalSpark implements Convention {
     INSTANCE;
 
     @Override public String toString() {
@@ -17,7 +17,7 @@ public enum KylinConvention implements Convention {
     @Override
     @SuppressWarnings("rawtypes")
     public Class getInterface() {
-        return KylinRel.class;
+        return LogicalSparkRel.class;
     }
 
     @Override

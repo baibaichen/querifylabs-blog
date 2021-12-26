@@ -1,6 +1,6 @@
 package io.apache.kylin.planner;
 
-import io.apache.kylin.planner.nodes.KylinConvention;
+import io.apache.kylin.planner.nodes.LogicalSpark;
 import io.apache.kylin.test.Resource.Util;
 import org.apache.calcite.adapter.enumerable.EnumerableConvention;
 import org.apache.calcite.plan.Convention;
@@ -56,7 +56,8 @@ class TPCHTest {
 
     @Test
     void testSimple() throws Exception {
-        runSQL("select * from tpch.lineitem", KylinConvention.INSTANCE);
-
+        runSQL("select * from tpch.lineitem where l_shipdate <= date '1998-12-01'", LogicalSpark.INSTANCE);
+/*        runSQL("select l_linestatus from tpch.lineitem where l_shipdate <= date '1998-12-01'",
+          LogicalSpark.INSTANCE);*/
     }
 }

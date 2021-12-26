@@ -1,7 +1,7 @@
 package io.apache.kylin.planner.rules;
 
 
-import io.apache.kylin.planner.nodes.KylinConvention;
+import io.apache.kylin.planner.nodes.LogicalSpark;
 import io.apache.kylin.planner.nodes.KylinTableScan;
 import org.apache.calcite.plan.Convention;
 import org.apache.calcite.plan.RelOptTable;
@@ -9,7 +9,6 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.convert.ConverterRule;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.logical.LogicalTableScan;
-import org.apache.calcite.schema.Table;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /** Planner rule that converts a {@link LogicalTableScan} to an {@link KylinTableScan}.
@@ -22,8 +21,7 @@ public class KylinTableScanRule extends ConverterRule {
     public static final Config DEFAULT_CONFIG = Config.INSTANCE
       .withConversion(LogicalTableScan.class,
         r -> KylinTableScan.canHandle(r.getTable()),
-        Convention.NONE, KylinConvention.INSTANCE,
-        "KylinTableScanRule")
+        Convention.NONE, LogicalSpark.INSTANCE, "KylinTableScanRule")
       .withRuleFactory(KylinTableScanRule::new);
 
     protected KylinTableScanRule(Config config) {

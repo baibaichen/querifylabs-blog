@@ -11,7 +11,9 @@ import org.apache.calcite.schema.Table;
 
 import java.util.List;
 
-public class KylinTableScan extends TableScan implements KylinRel {
+/** Implementation of {@link org.apache.calcite.rel.core.TableScan} in
+ * {@link LogicalSpark logical spark calling convention}. */
+public class KylinTableScan extends TableScan implements LogicalSparkRel {
 
     protected KylinTableScan(
       RelOptCluster cluster,
@@ -19,6 +21,8 @@ public class KylinTableScan extends TableScan implements KylinRel {
       List<RelHint> hints,
       RelOptTable table) {
         super(cluster, traitSet, hints, table);
+
+        assert getConvention() instanceof LogicalSpark;
     }
 
     /** Returns whether KylinTableScan can generate code to handle a
@@ -32,7 +36,7 @@ public class KylinTableScan extends TableScan implements KylinRel {
     public static KylinTableScan create(RelOptCluster cluster, RelOptTable relOptTable) {
         final Table table = relOptTable.unwrap(Table.class);
         final RelTraitSet traitSet =
-          cluster.traitSetOf(KylinConvention.INSTANCE)
+          cluster.traitSetOf(LogicalSpark.INSTANCE)
             .replaceIfs(RelCollationTraitDef.INSTANCE, () -> {
                 if (table != null) {
                     return table.getStatistic().getCollations();
