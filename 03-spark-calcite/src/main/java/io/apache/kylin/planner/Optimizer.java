@@ -12,6 +12,7 @@ import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
 import org.apache.calcite.materialize.Lattice;
 import org.apache.calcite.plan.Contexts;
 import org.apache.calcite.plan.ConventionTraitDef;
+import org.apache.calcite.plan.RegisterRules;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptCostImpl;
 import org.apache.calcite.plan.RelOptLattice;
@@ -71,13 +72,17 @@ public class Optimizer {
         this.lattices = lattices;
     }
     public static Optimizer of(String name, Schema schema) {
-        return of(name, schema, ImmutableList.of());
+        return of(name, schema, ImmutableList.of(), false);
+    }
+    public static Optimizer of(String name, Schema schema, List<Lattice> lattices) {
+        return of(name, schema, lattices, false);
     }
 
     public static Optimizer of(
       String name,
       Schema schema,
-      List<Lattice> lattices) {
+      List<Lattice> lattices,
+      boolean useKylin) {
         JavaTypeFactory typeFactory = new JavaTypeFactoryImpl();
 
         Properties configProperties = new Properties();
@@ -109,8 +114,10 @@ public class Optimizer {
         VolcanoPlanner planner = new VolcanoPlanner(RelOptCostImpl.FACTORY, Contexts.of(config));
         planner.addRelTraitDef(ConventionTraitDef.INSTANCE);
         planner.addRelTraitDef(RelCollationTraitDef.INSTANCE);
-        RelOptUtil.registerDefaultRules(planner, false, false);
-        KYLIN_RULES.forEach(planner::addRule);
+        RegisterRules.registerDefaultRules(planner, false, false, !useKylin);
+        if (useKylin) {
+            KYLIN_RULES.forEach(planner::addRule);
+        }
         RelOptCluster cluster = RelOptCluster.create(planner, new RexBuilder(typeFactory));
 
         SqlToRelConverter.Config converterConfig = SqlToRelConverter.config()

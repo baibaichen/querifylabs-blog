@@ -28,7 +28,12 @@ import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 class TPCHTest {
 
     void runSQL(String SQL, Convention convention) throws Exception {
-        Optimizer optimizer = Optimizer.of("tpch", Util.TPCH_SCHEMA);
+        Optimizer optimizer;
+        if (convention == EnumerableConvention.INSTANCE) {
+            optimizer = Optimizer.of("tpch", Util.TPCH_SCHEMA);
+        } else {
+            optimizer = Optimizer.of("tpch", Util.TPCH_SCHEMA, ImmutableList.of(), true);
+        }
         SqlNode sqlTree = optimizer.parse(SQL);
         SqlNode validatedSqlTree = optimizer.validate(sqlTree);
         RelNode convert = optimizer.convert(validatedSqlTree);
