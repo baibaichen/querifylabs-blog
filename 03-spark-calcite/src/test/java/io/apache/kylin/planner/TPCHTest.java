@@ -1,9 +1,12 @@
 package io.apache.kylin.planner;
 
+import com.google.common.collect.ImmutableList;
 import io.apache.kylin.planner.nodes.LogicalSpark;
 import io.apache.kylin.test.Resource.Util;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.calcite.adapter.enumerable.EnumerableConvention;
 import org.apache.calcite.plan.Convention;
+
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.externalize.RelWriterImpl;
@@ -15,11 +18,13 @@ import org.junit.jupiter.api.TestFactory;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.List;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 
+@Slf4j
 class TPCHTest {
 
     void runSQL(String SQL, Convention convention) throws Exception {
@@ -49,9 +54,14 @@ class TPCHTest {
 
     @TestFactory
     Stream<DynamicTest> tpchTest() {
-        return IntStream.range(0, 22).
-                mapToObj(i -> dynamicTest("tpc_" + (i + 1),
-                  () -> runSQL(Util.QUERIES.get(i), EnumerableConvention.INSTANCE)));
+        List<Convention> conventions=
+          ImmutableList.of(EnumerableConvention.INSTANCE, LogicalSpark.INSTANCE);
+
+        return conventions.stream()
+          .flatMap(convention -> IntStream.range(0, 22)
+            .mapToObj(i ->
+              dynamicTest(convention.getName() + " : tpc_" + (i + 1),
+                () -> runSQL(Util.QUERIES.get(i), convention))));
     }
 
     @Test
@@ -61,9 +71,9 @@ class TPCHTest {
         //  LogicalSpark.INSTANCE);                                                                           /*  2 */
         // runSQL("select min(l_linestatus) from tpch.lineitem where l_shipdate <= date '1998-12-01'",
         //  LogicalSpark.INSTANCE);                                                                           /*  3 */
-        runSQL("select min(l_linestatus) from tpch.lineitem where l_shipdate <= date '1998-12-01' order by 1",
-          LogicalSpark.INSTANCE);                                                                           /*  4 */
+        // runSQL("select min(l_linestatus) from tpch.lineitem where l_shipdate <= date '1998-12-01' order by 1",
+        //  LogicalSpark.INSTANCE);                                                                           /*  4 */
 
-        // runSQL(Util.QUERIES.get(0), LogicalSpark.INSTANCE);
+        runSQL(Util.QUERIES.get(0), LogicalSpark.INSTANCE);
     }
 }
