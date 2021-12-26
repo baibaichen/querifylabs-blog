@@ -57,7 +57,13 @@ class TPCHTest {
     @Test
     void testSimple() throws Exception {
         // runSQL("select * from tpch.lineitem where l_shipdate <= date '1998-12-01'", LogicalSpark.INSTANCE); /*  1 */
-         runSQL("select l_linestatus from tpch.lineitem where l_shipdate <= date '1998-12-01'",
-          LogicalSpark.INSTANCE);                                                                           /*  2 */
+        // runSQL("select l_linestatus from tpch.lineitem where l_shipdate <= date '1998-12-01'",
+        //  LogicalSpark.INSTANCE);                                                                           /*  2 */
+        // runSQL("select min(l_linestatus) from tpch.lineitem where l_shipdate <= date '1998-12-01'",
+        //  LogicalSpark.INSTANCE);                                                                           /*  3 */
+        runSQL("select min(l_linestatus) from tpch.lineitem where l_shipdate <= date '1998-12-01' order by 1",
+          LogicalSpark.INSTANCE);                                                                           /*  4 */
+
+        // runSQL(Util.QUERIES.get(0), LogicalSpark.INSTANCE);
     }
 }
