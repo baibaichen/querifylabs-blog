@@ -1,6 +1,7 @@
 package io.apache.kylin.planner;
 
 import com.google.common.collect.ImmutableList;
+import io.apache.kylin.planner.debug.Debugger;
 import io.apache.kylin.test.Resource.Util;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.calcite.DataContexts;
@@ -79,7 +80,7 @@ class RewriteTest {
         RelTraitSet traitSet = convert.getTraitSet()
                 .replace(EnumerableConvention.INSTANCE);
         RelNode transform = planner.transform(0, traitSet, convert);
-        log.info("\n" + Util.toString(transform));
+        log.info("\n" + Debugger.toString(transform));
     }
     /** Aggregation query at same level of aggregation as aggregation
      * materialization. */
@@ -100,7 +101,7 @@ class RewriteTest {
             substitutes = optimize2(testConfig);
         }
         assert substitutes != null;
-        substitutes.forEach(relNode -> log.info("\n" + Util.toString(relNode)));
+        substitutes.forEach(relNode -> log.info("\n" + Debugger.toString(relNode)));
     }
 
     List<RelNode> optimize2(TestConfig testConfig) {

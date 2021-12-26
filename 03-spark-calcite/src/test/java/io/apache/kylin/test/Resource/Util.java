@@ -3,21 +3,13 @@ package io.apache.kylin.test.Resource;
 import com.google.common.collect.ImmutableList;
 import io.apache.kylin.planner.KylinPlanner;
 import org.apache.calcite.adapter.tpch.TpchSchema;
-import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.plan.RelTraitDef;
-import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelReferentialConstraint;
 import org.apache.calcite.rel.RelReferentialConstraintImpl;
-import org.apache.calcite.rel.rel2sql.RelToSqlConverter;
 import org.apache.calcite.schema.QueryableTable;
 import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.TranslatableTable;
-import org.apache.calcite.sql.SqlDialect;
-import org.apache.calcite.sql.SqlExplainFormat;
-import org.apache.calcite.sql.SqlExplainLevel;
-import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.SqlWriterConfig;
 import org.apache.calcite.sql.parser.SqlParser;
 import org.apache.calcite.test.CalciteAssert;
 import org.apache.calcite.test.schemata.hr.Department;
@@ -37,7 +29,6 @@ import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.UnaryOperator;
 
 public class Util {
     public static final List<String> QUERIES = ImmutableList.of(
@@ -729,12 +720,6 @@ public class Util {
     static final double SCALE_FACTOR = 0.01d;
     public static final Schema TPCH_SCHEMA = new TpchSchema(SCALE_FACTOR, 1, 1, false);
 
-    static public String toString(RelNode rel) {
-        return org.apache.calcite.util.Util.toLinux(
-                RelOptUtil.dumpPlan("", rel, SqlExplainFormat.TEXT,
-                        SqlExplainLevel.EXPPLAN_ATTRIBUTES));
-    }
-
     @SuppressWarnings("rawtypes")
     static public Planner getPlanner(List<RelTraitDef> traitDefs,
                                      SqlParser.Config parserConfig,
@@ -758,30 +743,6 @@ public class Util {
                 .programs(programs)
                 .build();
         return new KylinPlanner(config);
-    }
-
-    /** Converts a relational expression to SQL. */
-    public static String toSql(RelNode root) {
-        return toSql(root, SqlDialect.DatabaseProduct.SPARK.getDialect());
-    }
-
-    /** Converts a relational expression to SQL in a given dialect. */
-    public static String toSql(RelNode root, SqlDialect dialect) {
-        return toSql(root, dialect, c ->
-                c.withAlwaysUseParentheses(false)
-                        .withSelectListItemsOnSeparateLines(false)
-                        .withUpdateSetListNewline(false)
-                        .withIndentation(0));
-    }
-
-    /** Converts a relational expression to SQL in a given dialect
-     * and with a particular writer configuration. */
-    public static String toSql(RelNode root, SqlDialect dialect,
-                                UnaryOperator<SqlWriterConfig> transform) {
-        final RelToSqlConverter converter = new RelToSqlConverter(dialect);
-        final SqlNode sqlNode = converter.visitRoot(root).asStatement();
-        return sqlNode.toSqlString(c -> transform.apply(c.withDialect(dialect)))
-                .getSql();
     }
 
     /**

@@ -1,6 +1,7 @@
 package io.apache.kylin.planner;
 
 import com.google.common.collect.ImmutableList;
+import io.apache.kylin.planner.debug.Debugger;
 import io.apache.kylin.test.Resource.LatticeHEP;
 import io.apache.kylin.test.Resource.Util;
 import lombok.extern.slf4j.Slf4j;
@@ -183,7 +184,7 @@ class TPCHLatticeSuggesterTest {
                 final RelNode root = optimizer.convert(node2);
                 RelTraitSet traitSet = root.getTraitSet().replace(EnumerableConvention.INSTANCE);
                 RelNode optimized =  optimizer.optimize(root, traitSet, true);
-                log.info(Util.toSql(optimized));
+                log.info(Debugger.toSql(optimized));
             }
 //            StarTable table = lattice.createStarTable();
 //            RelDataType rowType = table.getRowType(planner.getTypeFactory());

@@ -74,6 +74,8 @@ class TPCHTest {
         // runSQL("select min(l_linestatus) from tpch.lineitem where l_shipdate <= date '1998-12-01' order by 1",
         //  LogicalSpark.INSTANCE);                                                                           /*  4 */
 
-        runSQL(Util.QUERIES.get(13), LogicalSpark.INSTANCE);
+        runSQL("select * from tpch.lineitem where l_shipdate <= date '1998-12-01' limit 100", LogicalSpark.INSTANCE); /*  1 */
+
+        // runSQL(Util.QUERIES.get(1), EnumerableConvention.INSTANCE);
     }
 }

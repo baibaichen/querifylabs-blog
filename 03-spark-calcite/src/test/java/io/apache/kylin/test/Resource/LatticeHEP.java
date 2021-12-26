@@ -23,6 +23,7 @@
  */
 package io.apache.kylin.test.Resource;
 
+import io.apache.kylin.planner.debug.Debugger;
 import org.apache.calcite.plan.RelOptCostImpl;
 import org.apache.calcite.plan.hep.HepPlanner;
 import org.apache.calcite.plan.hep.HepProgram;
@@ -43,6 +44,6 @@ public class LatticeHEP {
                 new HepPlanner(PROGRAM, null, true, null, RelOptCostImpl.FACTORY);
         planner.setRoot(r);
         final RelNode r2 = planner.findBestExp();
-        return Util.toSql(r2);
+        return Debugger.toSql(r2);
     }
 }
