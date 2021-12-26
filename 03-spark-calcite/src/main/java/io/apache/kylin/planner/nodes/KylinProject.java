@@ -28,7 +28,7 @@ public class KylinProject extends Project implements LogicalSparkRel {
      * @param projects List of expressions for the input columns
      * @param rowType  Output row type
      */
-    public KylinProject(
+    protected KylinProject(
       RelOptCluster cluster,
       RelTraitSet traitSet,
       RelNode input,
@@ -48,7 +48,8 @@ public class KylinProject extends Project implements LogicalSparkRel {
         final RelMetadataQuery mq = cluster.getMetadataQuery();
         final RelTraitSet traitSet =
           cluster.traitSet().replace(LogicalSpark.INSTANCE)
-            .replaceIfs(RelCollationTraitDef.INSTANCE, () -> RelMdCollation.project(mq, input, projects));
+            .replaceIfs(RelCollationTraitDef.INSTANCE, () -> RelMdCollation.project(mq, input, projects))
+            .simplify();
         return new KylinProject(cluster, traitSet, input, projects, rowType);
     }
 

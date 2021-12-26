@@ -47,7 +47,9 @@ class KylinAggregateRule extends ConverterRule {
   @Override public @Nullable RelNode convert(RelNode rel) {
     final Aggregate agg = (Aggregate) rel;
     final RelTraitSet traitSet = rel.getCluster()
-        .traitSet().replace(LogicalSpark.INSTANCE);
+      .traitSet()
+      .replace(LogicalSpark.INSTANCE)
+      .simplify();
     return new KylinAggregate(
       rel.getCluster(),
       traitSet,

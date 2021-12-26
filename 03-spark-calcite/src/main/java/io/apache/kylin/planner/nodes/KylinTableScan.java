@@ -42,7 +42,8 @@ public class KylinTableScan extends TableScan implements LogicalSparkRel {
                     return table.getStatistic().getCollations();
                 }
                 return ImmutableList.of();
-            });
+            })
+            .simplify();
         return new KylinTableScan(cluster, traitSet, ImmutableList.of(), relOptTable);
     }
 }

@@ -43,7 +43,8 @@ public class KylinSort extends Sort implements LogicalSparkRel{
         final RelOptCluster cluster = child.getCluster();
         final RelTraitSet traitSet =
           cluster.traitSetOf(LogicalSpark.INSTANCE)
-            .replace(collation);
+            .replace(collation)
+            .simplify();
         return new KylinSort(cluster, traitSet, child, collation, offset, fetch);
     }
 
