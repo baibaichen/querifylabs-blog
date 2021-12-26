@@ -1,6 +1,7 @@
 package io.apache.kylin.planner.rules;
 
 import com.google.common.collect.ImmutableList;
+import io.apache.kylin.planner.nodes.KylinProject;
 import io.apache.kylin.planner.nodes.LogicalSpark;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.calcite.plan.RelOptRule;
@@ -19,8 +20,15 @@ public class KylinRules {
     public static final KylinFilterRule KYLIN_FILTER_RULE =
       KylinFilterRule.DEFAULT_CONFIG.toRule(KylinFilterRule.class);
 
+    /** Rule that converts a
+     *  {@link org.apache.calcite.rel.logical.LogicalProject} to an
+     * {@link KylinProject}. */
+    public static final KylinProjectRule KYLIN_PROJECT_RULE =
+      KylinProjectRule.DEFAULT_CONFIG.toRule(KylinProjectRule.class);
+
     public static final List<RelOptRule> KYLIN_RULES = ImmutableList.of(
       KYLIN_TABLE_SCAN_RULE,
-      KYLIN_FILTER_RULE
+      KYLIN_FILTER_RULE,
+      KYLIN_PROJECT_RULE
     );
 }

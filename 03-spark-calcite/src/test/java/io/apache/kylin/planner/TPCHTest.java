@@ -56,8 +56,8 @@ class TPCHTest {
 
     @Test
     void testSimple() throws Exception {
-        runSQL("select * from tpch.lineitem where l_shipdate <= date '1998-12-01'", LogicalSpark.INSTANCE);
-/*        runSQL("select l_linestatus from tpch.lineitem where l_shipdate <= date '1998-12-01'",
-          LogicalSpark.INSTANCE);*/
+        // runSQL("select * from tpch.lineitem where l_shipdate <= date '1998-12-01'", LogicalSpark.INSTANCE); /*  1 */
+         runSQL("select l_linestatus from tpch.lineitem where l_shipdate <= date '1998-12-01'",
+          LogicalSpark.INSTANCE);                                                                           /*  2 */
     }
 }
