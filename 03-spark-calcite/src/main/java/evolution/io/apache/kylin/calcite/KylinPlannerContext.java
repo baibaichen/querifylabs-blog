@@ -21,29 +21,27 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package io.apache.kylin.test.Resource;
+package evolution.io.apache.kylin.calcite;
 
-import evolution.Debugger;
-import org.apache.calcite.plan.RelOptCostImpl;
-import org.apache.calcite.plan.hep.HepPlanner;
-import org.apache.calcite.plan.hep.HepProgram;
-import org.apache.calcite.plan.hep.HepProgramBuilder;
-import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.rules.CoreRules;
+import org.apache.calcite.config.CalciteConnectionConfig;
+import org.apache.calcite.plan.Context;
+import org.apache.calcite.util.CancelFlag;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class LatticeHEP {
+public class KylinPlannerContext implements Context {
+    private final CalciteConnectionConfig config;
 
-    private static final HepProgram PROGRAM =
-            new HepProgramBuilder()
-                    .addRuleInstance(CoreRules.FILTER_INTO_JOIN)
-                    .addRuleInstance(CoreRules.JOIN_CONDITION_PUSH)
-                    .build();
+    public KylinPlannerContext(CalciteConnectionConfig config) {
+        this.config = config;
+    }
 
-    public static String afterTransformationSQL(RelNode r) {
-        final HepPlanner planner =
-                new HepPlanner(PROGRAM, null, true, null, RelOptCostImpl.FACTORY);
-        planner.setRoot(r);
-        final RelNode r2 = planner.findBestExp();
-        return Debugger.toSql(r2);
+    @Override
+    public <C> @Nullable C unwrap(Class<C> aClass) {
+        if (aClass.isInstance(config)) {
+            return aClass.cast(config);
+        }
+        if (aClass == CancelFlag.class)
+            return null;
+        throw new UnsupportedOperationException();
     }
 }

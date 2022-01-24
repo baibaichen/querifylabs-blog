@@ -1,0 +1,70 @@
+@startuml
+class org.apache.flink.table.planner.catalog.CatalogSchemaTable {
++ **Optional<Catalog>** getCatalog()
++ RelDataType getRowType(RelDataTypeFactory)
++ **ResolvedCatalogBaseTable<?> getResolvedCatalogTable()**
+}
+
+abstract class org.apache.flink.table.planner.catalog.FlinkSchema {
++ RelProtoDataType getType(String)
++ Set<String> getTypeNames()
++ Collection<Function> getFunctions(String)
++ Set<String> getFunctionNames()
++ Schema snapshot(SchemaVersion)
+}
+
+class org.apache.flink.table.planner.catalog.CatalogManagerCalciteSchema {
+ - **CatalogManager** catalogManager
+ + Schema getSubSchema(String)
+ }
+
+ class org.apache.flink.table.planner.catalog.CatalogCalciteSchema {
+ - **String catalogName**
+ - CatalogManager catalogManager
+ + Schema getSubSchema(String)
+ }
+ class org.apache.flink.table.planner.catalog.DatabaseCalciteSchema {
+ - String catalogName
+ - **String databaseName**
+ - CatalogManager catalogManager
+ + **CatalogSchemaTable** getTable(String)
+ }
+org.apache.calcite.schema.impl.AbstractTable <|-- org.apache.flink.table.planner.catalog.CatalogSchemaTable
+ org.apache.flink.table.planner.catalog.FlinkSchema <|-- org.apache.flink.table.planner.catalog.CatalogManagerCalciteSchema
+ org.apache.flink.table.planner.catalog.FlinkSchema <|-- org.apache.flink.table.planner.catalog.CatalogCalciteSchema
+ org.apache.flink.table.planner.catalog.FlinkSchema <|-- org.apache.flink.table.planner.catalog.DatabaseCalciteSchema
+
+class org.apache.flink.table.planner.plan.FlinkCalciteCatalogReader{}
+class org.apache.calcite.prepare.CalciteCatalogReader{}
+class org.apache.calcite.prepare.AbstractPreparingTable{}
+interface org.apache.calcite.prepare.PreparingTable{}
+interface org.apache.calcite.plan.RelOptTable
+LogicalTableScan o--> org.apache.calcite.plan.RelOptTable :1
+org.apache.calcite.plan.RelOptTable <|-- org.apache.calcite.prepare.PreparingTable
+org.apache.calcite.prepare.PreparingTable <|-- org.apache.calcite.prepare.AbstractPreparingTable
+org.apache.calcite.prepare.CalciteCatalogReader <|-- org.apache.flink.table.planner.plan.FlinkCalciteCatalogReader : 2
+
+class org.apache.flink.table.planner.plan.schema.FlinkPreparingTableBase{}
+class org.apache.flink.table.planner.plan.schema.CatalogSourceTable{
+  - **CatalogSchemaTable schemaTable**
+}
+class org.apache.flink.table.planner.plan.schema.TableSourceTable{
+  - **tableSource: DynamicTableSource**
+}
+org.apache.calcite.prepare.AbstractPreparingTable <|-- org.apache.flink.table.planner.plan.schema.FlinkPreparingTableBase
+org.apache.flink.table.planner.plan.schema.FlinkPreparingTableBase <|-- org.apache.flink.table.planner.plan.schema.CatalogSourceTable
+org.apache.flink.table.planner.plan.schema.FlinkPreparingTableBase <|-- org.apache.flink.table.planner.plan.schema.TableSourceTable
+
+interface org.apache.flink.table.Catalog{
+ + Optional<Factory> getFactory()
+}
+abstract class org.apache.flink.table.catalog.AbstractCatalog{}
+class org.apache.flink.table.catalog.hive.HiveCatalog{}
+org.apache.flink.table.Catalog <|-- org.apache.flink.table.catalog.AbstractCatalog
+org.apache.flink.table.catalog.AbstractCatalog <|-- org.apache.flink.table.catalog.hive.HiveCatalog
+
+org.apache.flink.table.planner.plan.FlinkCalciteCatalogReader <.. org.apache.flink.table.planner.catalog.CatalogSchemaTable : from
+org.apache.flink.table.planner.plan.FlinkCalciteCatalogReader ..>  org.apache.flink.table.planner.plan.schema.CatalogSourceTable :to
+org.apache.flink.table.Catalog <..  org.apache.flink.table.planner.plan.schema.CatalogSourceTable : use catalog create DynamicTableSource in toRel
+org.apache.flink.table.planner.catalog.CatalogSchemaTable o..> org.apache.flink.table.Catalog
+@enduml

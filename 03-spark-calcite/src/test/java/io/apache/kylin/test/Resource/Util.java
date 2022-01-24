@@ -1,7 +1,7 @@
 package io.apache.kylin.test.Resource;
 
 import com.google.common.collect.ImmutableList;
-import io.apache.kylin.planner.KylinPlanner;
+import io.apache.kylin.calcite.KylinPlanner;
 import org.apache.calcite.adapter.tpch.TpchSchema;
 import org.apache.calcite.plan.RelTraitDef;
 import org.apache.calcite.rel.RelReferentialConstraint;
@@ -721,9 +721,10 @@ public class Util {
     public static final Schema TPCH_SCHEMA = new TpchSchema(SCALE_FACTOR, 1, 1, false);
 
     @SuppressWarnings("rawtypes")
-    static public Planner getPlanner(List<RelTraitDef> traitDefs,
-                                     SqlParser.Config parserConfig,
-                                     Program... programs) {
+    static public Planner getPlanner(
+      List<RelTraitDef> traitDefs,
+      SqlParser.Config parserConfig,
+      Program... programs) {
         final SchemaPlus rootSchema = Frameworks.createRootSchema(true);
         return getPlanner(
                 traitDefs,
@@ -731,11 +732,13 @@ public class Util {
                 CalciteAssert.addSchema(rootSchema, CalciteAssert.SchemaSpec.HR),
                 programs);
     }
+
     @SuppressWarnings("rawtypes")
-    static public Planner getPlanner(List<RelTraitDef> traitDefs,
-                                     SqlParser.Config parserConfig,
-                                     SchemaPlus defaultSchema,
-                                     Program... programs) {
+    static public Planner getPlanner(
+      List<RelTraitDef> traitDefs,
+      SqlParser.Config parserConfig,
+      SchemaPlus defaultSchema,
+      Program... programs) {
         final FrameworkConfig config = Frameworks.newConfigBuilder()
                 .parserConfig(parserConfig)
                 .defaultSchema(defaultSchema)

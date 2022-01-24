@@ -1,0 +1,28 @@
+@startuml
+
+interface org.apache.flink.table.planner.plan.optimize.Optimizer
+abstract class org.apache.flink.table.planner.plan.optimize.CommonSubGraphBasedOptimizer
+class org.apache.flink.table.planner.plan.optimize.BatchCommonSubGraphBasedOptimizer
+class org.apache.flink.table.planner.plan.optimize.StreamCommonSubGraphBasedOptimizer
+
+org.apache.flink.table.planner.plan.optimize.Optimizer <|-- org.apache.flink.table.planner.plan.optimize.CommonSubGraphBasedOptimizer
+org.apache.flink.table.planner.plan.optimize.CommonSubGraphBasedOptimizer <|-- org.apache.flink.table.planner.plan.optimize.BatchCommonSubGraphBasedOptimizer
+org.apache.flink.table.planner.plan.optimize.CommonSubGraphBasedOptimizer <|-- org.apache.flink.table.planner.plan.optimize.StreamCommonSubGraphBasedOptimizer
+
+interface org.apache.flink.table.delegation.Planner
+abstract class org.apache.flink.table.planner.delegation.PlannerBase
+class org.apache.flink.table.planner.delegation.BatchPlanner
+class org.apache.flink.table.planner.delegation.StreamPlanner
+
+org.apache.flink.table.delegation.Planner <|-- org.apache.flink.table.planner.delegation.PlannerBase
+org.apache.flink.table.planner.delegation.PlannerBase <|--  org.apache.flink.table.planner.delegation.BatchPlanner
+org.apache.flink.table.planner.delegation.PlannerBase <|--  org.apache.flink.table.planner.delegation.StreamPlanner
+
+org.apache.flink.table.planner.delegation.PlannerBase  o--> org.apache.flink.table.planner.plan.optimize.Optimizer :getOptimizer
+org.apache.flink.table.planner.plan.optimize.BatchCommonSubGraphBasedOptimizer o..> org.apache.flink.table.planner.delegation.BatchPlanner : planner
+
+interface org.apache.flink.table.delegation.Parser
+class org.apache.flink.table.planner.delegation.ParserImpl
+org.apache.flink.table.delegation.Parser <|-- org.apache.flink.table.planner.delegation.ParserImpl
+org.apache.flink.table.planner.delegation.PlannerBase  o--> org.apache.flink.table.planner.delegation.ParserImpl :getParser by DefaultParserFactory
+@enduml

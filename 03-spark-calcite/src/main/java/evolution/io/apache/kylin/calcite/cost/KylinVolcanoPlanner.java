@@ -21,29 +21,34 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package io.apache.kylin.test.Resource;
+package evolution.io.apache.kylin.calcite.cost;
 
-import evolution.Debugger;
-import org.apache.calcite.plan.RelOptCostImpl;
-import org.apache.calcite.plan.hep.HepPlanner;
-import org.apache.calcite.plan.hep.HepProgram;
-import org.apache.calcite.plan.hep.HepProgramBuilder;
-import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.rules.CoreRules;
+import evolution.io.apache.kylin.calcite.KylinPlannerContext;
+import org.apache.calcite.plan.ConventionTraitDef;
+import org.apache.calcite.plan.RelOptPlanner;
+import org.apache.calcite.plan.volcano.VolcanoPlanner;
+import org.apache.calcite.rel.RelCollationTraitDef;
+import org.apache.calcite.rel.RelDistributionTraitDef;
 
-public class LatticeHEP {
+/**
+ * Refer to <code>HiveVolcanoPlanner</code>, now only implement {@link #createPlanner}
+ */
+public class KylinVolcanoPlanner {
 
-    private static final HepProgram PROGRAM =
-            new HepProgramBuilder()
-                    .addRuleInstance(CoreRules.FILTER_INTO_JOIN)
-                    .addRuleInstance(CoreRules.JOIN_CONDITION_PUSH)
-                    .build();
+    private KylinVolcanoPlanner(){}
 
-    public static String afterTransformationSQL(RelNode r) {
-        final HepPlanner planner =
-                new HepPlanner(PROGRAM, null, true, null, RelOptCostImpl.FACTORY);
-        planner.setRoot(r);
-        final RelNode r2 = planner.findBestExp();
-        return Debugger.toSql(r2);
+    private static final boolean ENABLE_COLLATION_TRAIT = true;
+    private static final boolean ENABLE_DISTRIBUTION_TRAIT = false;
+
+    public static RelOptPlanner createPlanner(KylinPlannerContext conf) {
+        RelOptPlanner planner = new VolcanoPlanner(conf);
+        planner.addRelTraitDef(ConventionTraitDef.INSTANCE);
+        if (ENABLE_COLLATION_TRAIT) {
+            planner.addRelTraitDef(RelCollationTraitDef.INSTANCE);
+        }
+        if (ENABLE_DISTRIBUTION_TRAIT) {
+            planner.addRelTraitDef(RelDistributionTraitDef.INSTANCE);
+        }
+        return planner;
     }
 }

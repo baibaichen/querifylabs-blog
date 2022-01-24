@@ -1,0 +1,44 @@
+@startuml
+interface org.apache.ignite.internal.sql.engine.schema.IgniteTable {
+}
+interface org.apache.ignite.internal.sql.engine.schema.InternalIgniteTable {
+
+}
+class org.apache.ignite.internal.sql.engine.schema.IgniteTableImpl {
+}
+
+interface org.apache.ignite.internal.sql.engine.schema.SqlSchemaManager {
+~ SchemaPlus schema(String)
+~ IgniteTable tableById(IgniteUuid)
+}
+class org.apache.ignite.internal.sql.engine.schema.SqlSchemaManagerImpl {
+- Map<String,IgniteSchema> igniteSchemas
+- Map<String,Schema> externalCatalogs
+}
+org.apache.ignite.internal.sql.engine.schema.SqlSchemaManager <|.. org.apache.ignite.internal.sql.engine.schema.SqlSchemaManagerImpl
+org.apache.calcite.schema.TranslatableTable <|-- org.apache.ignite.internal.sql.engine.schema.IgniteTable
+org.apache.ignite.internal.sql.engine.schema.InternalIgniteTable <|.. org.apache.ignite.internal.sql.engine.schema.IgniteTableImpl
+org.apache.ignite.internal.sql.engine.schema.IgniteTable <|-- org.apache.ignite.internal.sql.engine.schema.InternalIgniteTable
+
+class org.apache.ignite.internal.sql.engine.schema.IgniteSchema {
+- String schemaName
+- Map<String,InternalIgniteTable> tblMap
++ String getName()
+# Map<String,Table> getTableMap()
++ void addTable(String,InternalIgniteTable)
++ void removeTable(String)
+}
+interface org.apache.calcite.schema.Schema{}
+ interface org.apache.calcite.schema.SchemaPlus{}
+org.apache.calcite.schema.impl.AbstractSchema <|-- org.apache.ignite.internal.sql.engine.schema.IgniteSchema
+org.apache.calcite.schema.impl.AbstractSchema <|-- ExternalSchemaHolder
+org.apache.calcite.schema.Schema <|.. org.apache.calcite.schema.impl.AbstractSchema
+org.apache.calcite.schema.Schema <|--  org.apache.calcite.schema.SchemaPlus
+
+interface org.apache.ignite.internal.sql.engine.extension.SqlExtension.ExternalSchema{
+IgniteTable table(String name);
+}
+interface org.apache.ignite.internal.sql.engine.extension.SqlExtension.ExternalCatalog{
+~ ExternalSchema schema(String name);
+}
+@enduml
