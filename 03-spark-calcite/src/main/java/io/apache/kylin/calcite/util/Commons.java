@@ -8,6 +8,9 @@ import org.apache.calcite.util.SourceStringReader;
 
 import java.io.Reader;
 
+import static io.apache.kylin.calcite.impl.CalciteConfig.DEFAULT_PARSER_CONFIG;
+
+@Deprecated
 public class Commons {
    /** */
    private Commons() {
@@ -40,5 +43,9 @@ public class Commons {
    public static SqlNodeList parse(Reader reader, SqlParser.Config parserCfg) throws SqlParseException {
        SqlParser parser = SqlParser.create(reader, parserCfg);
        return parser.parseStmtList();
+   }
+
+   public static SqlNodeList parse(String qry) {
+       return parse(qry, DEFAULT_PARSER_CONFIG);
    }
 }

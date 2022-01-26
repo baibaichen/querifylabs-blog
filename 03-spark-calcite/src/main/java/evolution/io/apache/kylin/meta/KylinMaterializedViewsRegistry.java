@@ -27,7 +27,7 @@ import com.google.common.collect.ImmutableList;
 import io.apache.kylin.calcite.RelOptKylinTable;
 import evolution.io.apache.kylin.calcite.Utility;
 import io.apache.kylin.calcite.nodes.KylinTableScan;
-import io.apache.kylin.calcite.schema.SparkTable;
+import io.apache.kylin.calcite.catalog.SparkTable;
 import org.apache.calcite.config.CalciteConnectionConfig;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptUtil;

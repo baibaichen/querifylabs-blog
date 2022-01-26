@@ -40,6 +40,7 @@ import org.apache.calcite.sql.validate.SqlValidatorUtil;
 
 import static java.util.Objects.requireNonNull;
 
+@Deprecated
 public class Utility {
     private Utility() {}
 
