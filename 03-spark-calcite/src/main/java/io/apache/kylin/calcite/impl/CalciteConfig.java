@@ -44,7 +44,7 @@ public class CalciteConfig {
                 .withQuoting(quoting);
     }
 
-    public SqlValidator.Config toValidatorConfig(SqlValidator.Config config ){
+    public SqlValidator.Config toValidatorConfig(SqlValidator.Config config){
         CalciteConnectionConfig connectionConfig = toConnectionConfig();
         return config
                 .withLenientOperatorLookup(connectionConfig.lenientOperatorLookup())

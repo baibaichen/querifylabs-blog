@@ -1,15 +1,11 @@
 package org.example.test;
 
-
-import io.apache.kylin.calcite.impl.QueryParser;
 import io.apache.kylin.spark.calcite.table.planner.delegation.SparkBatchPlanner;
 import io.apache.kylin.table.delegation.Parser;
 import org.apache.spark.sql.SparkSession;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ReadTest {
 

@@ -1,12 +1,11 @@
 package io.apache.kylin.table.operations;
 
 import io.apache.kylin.table.delegation.Planner;
-import io.apache.kylin.table.delegation.Parser;
 
 /**
  * Covers all sort of Table operations such as queries(DQL), modifications(DML), definitions(DDL),
  * or control actions(DCL). This is the output of {@link Planner#getParser()} and {@link
- * Parser#parse(String)}.
+ * io.apache.kylin.table.delegation.Parser#parse(String)}.
  *
  * @see QueryOperation
  * @see ModifyOperation
