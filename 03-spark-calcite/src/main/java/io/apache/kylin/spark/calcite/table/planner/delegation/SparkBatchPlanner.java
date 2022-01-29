@@ -1,6 +1,7 @@
 package io.apache.kylin.spark.calcite.table.planner.delegation;
 
 import io.apache.kylin.calcite.impl.QueryParser;
+import io.apache.kylin.spark.calcite.PlannerContext;
 import io.apache.kylin.table.delegation.Parser;
 import org.apache.spark.sql.SparkSession;
 
@@ -12,8 +13,11 @@ public class SparkBatchPlanner extends PlannerBase {
 
     @Override
     public Parser getParser() {
-        return new ParserImpl(
-                () -> new QueryParser(getPlannerContext().createSqlValidator(getPlannerContext().createCatalogReader()))
-        );
+        return new ParserImpl(this::createParser);
+    }
+
+    private QueryParser createParser() {
+        PlannerContext context = getPlannerContext();
+        return new QueryParser(context.createSqlValidator(context.createCatalogReader()), context.createCluster());
     }
 }

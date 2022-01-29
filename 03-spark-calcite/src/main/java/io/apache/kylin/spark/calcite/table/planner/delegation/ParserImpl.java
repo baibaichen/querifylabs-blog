@@ -1,10 +1,13 @@
 package io.apache.kylin.spark.calcite.table.planner.delegation;
 
 import io.apache.kylin.calcite.impl.QueryParser;
+import io.apache.kylin.spark.calcite.table.planner.operations.PlannerQueryOperation;
 import io.apache.kylin.table.delegation.Parser;
 import io.apache.kylin.table.operations.Operation;
+import org.apache.calcite.rel.RelRoot;
 import org.apache.calcite.sql.SqlNode;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -22,7 +25,8 @@ public class ParserImpl implements Parser {
 
         // parse the sql query
         SqlNode parsed = parser.parse(statement);
-
-        return null;
+        RelRoot relational =  parser.rel(parsed);
+        Operation operation = new PlannerQueryOperation(relational.project());
+        return Collections.singletonList(operation);
     }
 }

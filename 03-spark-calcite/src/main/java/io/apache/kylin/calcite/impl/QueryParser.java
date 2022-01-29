@@ -2,11 +2,19 @@ package io.apache.kylin.calcite.impl;
 
 import io.apache.kylin.calcite.KylinSQLException;
 import io.apache.kylin.calcite.util.Commons;
+import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.prepare.CalciteCatalogReader;
+import org.apache.calcite.rel.RelRoot;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.util.SqlBasicVisitor;
 import org.apache.calcite.sql.util.SqlVisitor;
 import org.apache.calcite.sql.validate.SqlValidator;
+import org.apache.calcite.sql2rel.SqlToRelConverter;
+import org.apache.calcite.sql2rel.StandardConvertletTable;
+import org.checkerframework.checker.nullness.qual.NonNull;
+
+import static java.util.Objects.requireNonNull;
 
 public class QueryParser {
 
@@ -21,9 +29,11 @@ public class QueryParser {
     }
 
     private final SqlValidator validator;
-
-    public QueryParser(SqlValidator validator) {
+    private final RelOptCluster cluster;
+    public QueryParser(SqlValidator validator,
+                       @NonNull RelOptCluster cluster) {
         this.validator = validator;
+        this.cluster = requireNonNull(cluster, "rowType");
     }
 
     public SqlNode parse(String sql) {
@@ -37,5 +47,24 @@ public class QueryParser {
         SqlVisitor<Void> visitor = new UnsupportedOperationVisitor();
         node.accept(visitor);
         return node;
+    }
+
+    public RelRoot rel(SqlNode node) {
+        SqlToRelConverter sqlToRelConverter = createSqlToRelConverter();
+        return sqlToRelConverter.convertQuery(node, false, true);
+    }
+
+    private SqlToRelConverter createSqlToRelConverter() {
+
+        //TODO: custom StandardConvertletTable
+        //TODO: ViewExpander
+
+        return new SqlToRelConverter(
+                null,
+                validator,
+                validator.getCatalogReader().unwrap(CalciteCatalogReader.class),
+                cluster,
+                StandardConvertletTable.INSTANCE,
+                CalciteConfig.DEFAULT_TO_REL_CONVERTER_CONFIG);
     }
 }

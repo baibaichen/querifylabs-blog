@@ -33,5 +33,8 @@ public class KylinSQLException extends RuntimeException {
 
         /** Generic parsing error. */
         public static final int PARSING = -1;
+
+        /** Generic validating error. */
+        public static final int VALIDATING = -2;
     }
 }

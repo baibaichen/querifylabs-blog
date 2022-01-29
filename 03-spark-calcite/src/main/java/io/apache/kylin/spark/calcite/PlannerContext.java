@@ -6,8 +6,15 @@ import io.apache.kylin.calcite.impl.CalciteConfig;
 import io.apache.kylin.calcite.impl.SparkTypeFactory;
 import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.jdbc.CalciteSchemaBuilder;
+import org.apache.calcite.plan.Contexts;
+import org.apache.calcite.plan.ConventionTraitDef;
+import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelOptCostImpl;
+import org.apache.calcite.plan.volcano.VolcanoPlanner;
 import org.apache.calcite.prepare.CalciteCatalogReader;
 import org.apache.calcite.prepare.Prepare;
+import org.apache.calcite.rel.RelCollationTraitDef;
+import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.sql.SqlOperatorTable;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
@@ -55,11 +62,20 @@ public class PlannerContext {
                 typeFactory,
                 CalciteConfig.DEFAULT.toConnectionConfig());
     }
+
     public SqlValidator createSqlValidator(Prepare.CatalogReader catalogReader){
         // less flexible
         final SqlOperatorTable opTab =
                 SqlOperatorTables.chain(SqlStdOperatorTable.instance(), catalogReader);
 
         return SqlValidatorUtil.newValidator(opTab, catalogReader, typeFactory, CalciteConfig.DEFAULT_VALIDATOR_CONFIG);
+    }
+
+    public RelOptCluster createCluster() {
+        VolcanoPlanner planner = new VolcanoPlanner(RelOptCostImpl.FACTORY,
+                Contexts.of(CalciteConfig.DEFAULT_CONNECTION_CONFIG));
+        planner.addRelTraitDef(ConventionTraitDef.INSTANCE);
+        planner.addRelTraitDef(RelCollationTraitDef.INSTANCE);
+        return RelOptCluster.create(planner, new RexBuilder(typeFactory));
     }
 }

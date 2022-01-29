@@ -8,6 +8,7 @@ import org.apache.calcite.config.CalciteConnectionProperty;
 import org.apache.calcite.sql.parser.SqlParser;
 import org.apache.calcite.sql.validate.SqlConformanceEnum;
 import org.apache.calcite.sql.validate.SqlValidator;
+import org.apache.calcite.sql2rel.SqlToRelConverter;
 
 import java.util.Properties;
 
@@ -15,6 +16,32 @@ import java.util.Properties;
  * Configuration passed to the Calcite.
  */
 public class CalciteConfig {
+
+    /**
+     * Whether to expand subqueries. When set to {@code false}, subqueries are left as is in the form of
+     * {@link org.apache.calcite.rex.RexSubQuery}. Otherwise they are expanded into {@link org.apache.calcite.rel.core.Correlate}
+     * instances.
+     * Do not enable this because you may run into <a href="https://issues.apache.org/jira/browse/CALCITE-3484">CALCITE-3484</a>. Instead, subquery
+     * elimination rules are executed during logical planning. In addition, resulting plans are slightly better that those
+     * produced by "expand" flag.
+     */
+    private static final boolean EXPAND = false;
+
+    /**
+     * currently SqlToRelConverter creates not optimal plan for both optimization and execution.
+     * so it's better to disable such rewriting right now.
+     *
+     * <p/>
+     * See <a href="https://issues.apache.org/jira/browse/IGNITE-14277">Calcite. Rewrite IN predicate to semi-join</a>
+     */
+    private static final int KYLIN_IN_ELEMENTS_THRESHOLD = Integer.MAX_VALUE;
+
+    /**
+     * Whether to trim unused fields. The trimming is needed after subquery elimination.
+     */
+    private static final boolean TRIM_UNUSED_FIELDS = false;
+
+
     public static final CalciteConfig DEFAULT =
             new CalciteConfig(false, Casing.UNCHANGED, Casing.UNCHANGED, Quoting.DOUBLE_QUOTE);
 
@@ -23,6 +50,11 @@ public class CalciteConfig {
 
     public static final SqlValidator.Config DEFAULT_VALIDATOR_CONFIG =
             DEFAULT.toValidatorConfig(SqlValidator.Config.DEFAULT).withSqlConformance(SqlConformanceEnum.DEFAULT);
+
+    public static final SqlToRelConverter.Config DEFAULT_TO_REL_CONVERTER_CONFIG =
+            DEFAULT.toSqlToRelConverterConfig(SqlToRelConverter.config());
+
+    public static final CalciteConnectionConfig DEFAULT_CONNECTION_CONFIG = DEFAULT.toConnectionConfig();
 
     private final boolean caseSensitive;
     private final Casing unquotedCasing;
@@ -50,6 +82,15 @@ public class CalciteConfig {
                 .withLenientOperatorLookup(connectionConfig.lenientOperatorLookup())
                 .withDefaultNullCollation(connectionConfig.defaultNullCollation())
                 .withIdentifierExpansion(true);
+    }
+
+    public SqlToRelConverter.Config toSqlToRelConverterConfig(SqlToRelConverter.Config config) {
+        // see Flink's PlannerContext#getSqlToRelConverterConfig
+        // TODO: withHintStrategyTable
+        // TODO: withRelBuilderFactory
+        return config.withExpand(EXPAND)
+                .withInSubQueryThreshold(KYLIN_IN_ELEMENTS_THRESHOLD)
+                .withTrimUnusedFields(TRIM_UNUSED_FIELDS);
     }
 
     public CalciteConnectionConfig toConnectionConfig() {
