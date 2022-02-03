@@ -1,0 +1,36 @@
+@startuml
+class org.apache.calcite.plan.RelOptCluster {
+- RelDataTypeFactory typeFactory
+- RelOptPlanner planner
+- AtomicInteger nextCorrel
+- Map<String,RelNode> mapCorrelToRel
+- RexNode originalExpression
+- RexBuilder rexBuilder
+- RelMetadataProvider metadataProvider
+- MetadataFactory metadataFactory
+- HintStrategyTable hintStrategies
+- RelTraitSet emptyTraitSet
+- RelMetadataQuery mq
+- Supplier<RelMetadataQuery> mqSupplier
++ {static} RelOptCluster create(RelOptPlanner,RexBuilder)
++ RelOptQuery getQuery()
++ RexNode getOriginalExpression()
++ void setOriginalExpression(RexNode)
++ RelOptPlanner getPlanner()
++ RelDataTypeFactory getTypeFactory()
++ RexBuilder getRexBuilder()
++ RelMetadataProvider getMetadataProvider()
++ void setMetadataProvider(RelMetadataProvider)
++ MetadataFactory getMetadataFactory()
++ void setMetadataQuerySupplier(Supplier<RelMetadataQuery>)
++ RelMetadataQuery getMetadataQuery()
++ Supplier<RelMetadataQuery> getMetadataQuerySupplier()
++ void invalidateMetadataQuery()
++ void setHintStrategies(HintStrategyTable)
++ HintStrategyTable getHintStrategies()
++ CorrelationId createCorrel()
++ RelTraitSet traitSet()
++ RelTraitSet traitSetOf(RelTrait)
++ RelTraitSet traitSetOf(RelTrait)
+}
+@enduml

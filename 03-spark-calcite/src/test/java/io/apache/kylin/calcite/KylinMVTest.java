@@ -28,8 +28,8 @@ import evolution.io.apache.kylin.calcite.KylinPlannerContext;
 import evolution.io.apache.kylin.calcite.cost.KylinVolcanoPlanner;
 import evolution.io.apache.kylin.meta.KylinMaterializedViewsRegistry;
 import evolution.io.apache.kylin.meta.KylinRelOptMaterialization;
-import io.apache.kylin.calcite.nodes.KylinTableScan;
-import io.apache.kylin.calcite.nodes.LogicalSpark;
+import io.apache.kylin.pp.calcite.nodes.KylinTableScan;
+import io.apache.kylin.pp.calcite.nodes.LogicalSpark;
 import io.apache.kylin.test.Resource.Util;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.calcite.adapter.java.JavaTypeFactory;
@@ -53,7 +53,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Properties;
 
-import static io.apache.kylin.calcite.rules.KylinRules.KYLIN_RULES;
+import static io.apache.kylin.pp.calcite.rules.KylinRules.KYLIN_RULES;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 @Slf4j

@@ -2,7 +2,7 @@ package io.apache.kylin.calcite;
 
 import com.google.common.collect.ImmutableList;
 import evolution.io.apache.kylin.calcite.Optimizer;
-import io.apache.kylin.calcite.nodes.LogicalSpark;
+import io.apache.kylin.pp.calcite.nodes.LogicalSpark;
 import io.apache.kylin.test.Resource.Util;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.calcite.adapter.enumerable.EnumerableConvention;

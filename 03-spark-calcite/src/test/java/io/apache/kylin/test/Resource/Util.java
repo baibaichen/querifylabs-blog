@@ -1,7 +1,7 @@
 package io.apache.kylin.test.Resource;
 
 import com.google.common.collect.ImmutableList;
-import io.apache.kylin.calcite.KylinPlanner;
+import io.apache.kylin.pp.calcite.KylinPlanner;
 import org.apache.calcite.adapter.tpch.TpchSchema;
 import org.apache.calcite.plan.RelTraitDef;
 import org.apache.calcite.rel.RelReferentialConstraint;

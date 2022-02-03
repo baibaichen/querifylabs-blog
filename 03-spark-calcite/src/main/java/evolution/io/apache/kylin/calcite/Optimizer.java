@@ -43,7 +43,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
-import static io.apache.kylin.calcite.rules.KylinRules.KYLIN_RULES;
+import static io.apache.kylin.pp.calcite.rules.KylinRules.KYLIN_RULES;
 
 @Slf4j
 public class Optimizer {

@@ -1,7 +1,7 @@
 package evolution;
 
 import com.google.common.collect.ImmutableList;
-import io.apache.kylin.calcite.RelOptKylinTable;
+import io.apache.kylin.pp.calcite.RelOptKylinTable;
 import org.apache.calcite.materialize.Lattice;
 import org.apache.calcite.plan.RelOptSchema;
 import org.apache.calcite.plan.RelOptUtil;

@@ -23,7 +23,7 @@
  */
 package evolution.io.apache.kylin.calcite;
 
-import io.apache.kylin.calcite.util.Commons;
+import io.apache.kylin.pp.calcite.util.Commons;
 import org.apache.calcite.config.CalciteConnectionConfig;
 import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.prepare.CalciteCatalogReader;
