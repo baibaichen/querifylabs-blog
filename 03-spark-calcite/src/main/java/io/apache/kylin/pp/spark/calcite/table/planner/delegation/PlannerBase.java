@@ -19,5 +19,5 @@ abstract class PlannerBase implements Planner {
         return plannerContext;
     }
 
-    protected abstract <T,R> Optimizer<T, R> getOptimizer();
+    protected abstract <T, R> Optimizer<T, R> getOptimizer();
 }

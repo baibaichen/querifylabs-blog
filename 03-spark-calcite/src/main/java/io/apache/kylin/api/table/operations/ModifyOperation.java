@@ -19,8 +19,6 @@
 package io.apache.kylin.api.table.operations;
 
 
-import java.util.List;
-
 /**
  * A {@link Operation} that describes the DML queries such as e.g. INSERT or conversion to a
  * DataStream.
