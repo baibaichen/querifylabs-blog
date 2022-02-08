@@ -5,6 +5,7 @@ import org.apache.calcite.plan.RelTrait;
 import org.apache.calcite.plan.hep.HepMatchOrder;
 import org.apache.calcite.plan.hep.HepProgramBuilder;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.tools.RuleSet;
 import org.apache.kylin.sql.planner.calcite.KylinContext;
 
 import java.util.Objects;
@@ -126,4 +127,53 @@ public class KylinHepRuleSetProgram<OC extends  KylinContext> extends KylinRuleS
         requestedRootTraits = relTraits;
     }
 
+    public static class Builder<OC extends KylinContext> {
+
+        public static <OC extends  KylinContext> Builder<OC> of() {
+            return new Builder<>();
+        }
+
+        private final KylinHepRuleSetProgram<OC> hepRuleSetProgram = new KylinHepRuleSetProgram<>();
+
+        public Builder<OC> setHepRulesExecutionType(HEP_RULES_EXECUTION_TYPE executionType) {
+            hepRuleSetProgram.setHepRulesExecutionType(executionType);
+            return this;
+        }
+
+        /**
+         * Sets rules match order.
+         */
+        public Builder<OC> setHepMatchOrder(HepMatchOrder matchOrder) {
+            hepRuleSetProgram.setHepMatchOrder(matchOrder);
+            return this;
+        }
+
+        /**
+         * Sets the limit of pattern matches.
+         */
+        public Builder<OC> setMatchLimit(Integer matchLimit) {
+            hepRuleSetProgram.setMatchLimit(matchLimit);
+            return this;
+        }
+
+        /**
+         * Adds rules for this program.
+         */
+        public Builder<OC> add(RuleSet ruleSet) {
+            hepRuleSetProgram.add(ruleSet);
+            return this;
+        }
+
+        /**
+         * Sets requested root traits.
+         */
+        public Builder<OC> setRequestedRootTraits(RelTrait[] relTraits) {
+            hepRuleSetProgram.setRequestedRootTraits(relTraits);
+            return this;
+        }
+
+        public KylinHepRuleSetProgram<OC>  build() {
+            return hepRuleSetProgram;
+        }
+    }
 }
