@@ -2,7 +2,7 @@ package org.apache.calcite.test;
 
 import com.google.common.base.Throwables;
 import org.apache.kylin.test.Resource.JdbcTest;
-import org.apache.kylin.test.Resource.TPCHSchema;
+import org.apache.kylin.test.Resource.TPCH;
 import org.apache.calcite.test.schemata.foodmart.FoodmartSchema;
 import org.apache.calcite.util.TestUtil;
 import org.junit.jupiter.api.Test;
@@ -115,13 +115,13 @@ public class TPCHLatticeRewriteTest {
         String model = "{\n" +
                 "  \"version\": \"1.0\",  \n" +
                 "  \"schemas\": [\n" +
-                TPCHSchema.TPCH_01_SCHEMA + ",\n" +
+                TPCH.MODEL_01 + ",\n" +
                 "     {\n" +
                 "        name: 'adhoc',\n" +
                 "        lattices: \n" + Arrays.toString(lattices) +
                 "     } \n" +
                 "   ]\n" +
                 "}";
-        return CalciteAssert.model(model).withDefaultSchema(TPCHSchema.TPCH_01_NAME);
+        return CalciteAssert.model(model).withDefaultSchema(TPCH.NAME_01);
     }
 }

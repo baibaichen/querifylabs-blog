@@ -3,7 +3,7 @@ package org.apache.kylin.calcite;
 import com.google.common.collect.ImmutableList;
 import evolution.io.apache.kylin.calcite.Optimizer;
 import org.apache.kylin.sql.planner.plan.nodes.LogicalSpark;
-import org.apache.kylin.test.Resource.Util;
+import org.apache.kylin.test.Resource.TPCH;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.calcite.adapter.enumerable.EnumerableConvention;
 import org.apache.calcite.plan.Convention;
@@ -30,9 +30,9 @@ class TPCHTest {
     void runSQL(String SQL, Convention convention) throws Exception {
         Optimizer optimizer;
         if (convention == EnumerableConvention.INSTANCE) {
-            optimizer = Optimizer.of("tpch", Util.TPCH_SCHEMA);
+            optimizer = Optimizer.of("tpch", TPCH.SCHEMA);
         } else {
-            optimizer = Optimizer.of("tpch", Util.TPCH_SCHEMA, ImmutableList.of(), true);
+            optimizer = Optimizer.of("tpch", TPCH.SCHEMA, ImmutableList.of(), true);
         }
         SqlNode sqlTree = optimizer.parse(SQL);
         SqlNode validatedSqlTree = optimizer.validate(sqlTree);
@@ -63,10 +63,10 @@ class TPCHTest {
           ImmutableList.of(LogicalSpark.INSTANCE, EnumerableConvention.INSTANCE);
 
         return conventions.stream()
-          .flatMap(convention -> IntStream.range(0, 22)
+          .flatMap(convention -> IntStream.rangeClosed(1, 22)
             .mapToObj(i ->
-              dynamicTest(convention.getName() + " : tpc_" + (i + 1),
-                () -> runSQL(Util.QUERIES.get(i), convention))));
+              dynamicTest(convention.getName() + " : tpc_" + i,
+                () -> runSQL(TPCH.sql(i), convention))));
     }
 
     static final String SCAN_0 = "select * from tpch.lineitem";

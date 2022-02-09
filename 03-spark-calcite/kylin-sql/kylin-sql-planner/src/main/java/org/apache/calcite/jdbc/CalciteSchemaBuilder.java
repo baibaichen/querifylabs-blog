@@ -32,6 +32,9 @@ public class CalciteSchemaBuilder {
     public static CalciteSchema asRootSchema(Schema root) {
         return new SimpleCalciteSchema(null, root, "");
     }
+    public static CalciteSchema asRootSchema(Schema root, String name) {
+        return new SimpleCalciteSchema(null, root, name);
+    }
 
     private CalciteSchemaBuilder() {}
 }

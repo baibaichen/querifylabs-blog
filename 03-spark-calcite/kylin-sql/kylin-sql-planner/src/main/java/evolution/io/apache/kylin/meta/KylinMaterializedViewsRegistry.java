@@ -25,25 +25,17 @@ package evolution.io.apache.kylin.meta;
 
 import com.google.common.collect.ImmutableList;
 import org.apache.kylin.sql.planner.calcite.RelOptKylinTable;
-import evolution.io.apache.kylin.calcite.Utility;
+import org.apache.kylin.sql.planner.delegation.PlannerContext;
 import org.apache.kylin.sql.planner.plan.nodes.KylinTableScan;
 import org.apache.kylin.sql.planner.catalog.SparkTable;
 import org.apache.calcite.config.CalciteConnectionConfig;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptUtil;
-import org.apache.calcite.prepare.CalciteCatalogReader;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.RelRoot;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
-import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
-import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.parser.SqlParseException;
-import org.apache.calcite.sql.validate.SqlValidator;
-import org.apache.calcite.sql2rel.SqlToRelConverter;
-import org.apache.calcite.sql2rel.StandardConvertletTable;
 import org.apache.calcite.util.Util;
 
 import java.util.List;
@@ -79,42 +71,20 @@ public class KylinMaterializedViewsRegistry {
         return KylinTableScan.create(cluster, relTable);
     }
 
-    public RelNode toRel(
-      RelOptCluster cluster,
-      RelDataTypeFactory typeFactory,
-      SchemaPlus defaultSchema,
-      String sql) throws SqlParseException {
-        final SqlNode parsed = Utility.parse(config, sql);
-        final CalciteCatalogReader catalogReader =
-          Utility.createCatalogReader(config, defaultSchema, typeFactory);
-        final SqlValidator validator = Utility.createSqlValidator(config, catalogReader, typeFactory);
-        SqlNode validateed = validator.validate(parsed);
-        SqlToRelConverter.Config converterConfig = SqlToRelConverter.config()
-          .withTrimUnusedFields(true)
-          .withExpand(false); // https://issues.apache.org/jira/browse/CALCITE-1045
-        SqlToRelConverter converter =
-          new SqlToRelConverter(null, validator, catalogReader, cluster,
-            StandardConvertletTable.INSTANCE, converterConfig);
-        RelRoot root = converter.convertQuery(validateed, false, true);
-        return root.rel;
-    }
-
     /**
      * Parses and creates a materialization.
      */
     public KylinRelOptMaterialization createMaterialization(
-      RelOptCluster cluster,
-      RelDataTypeFactory typeFactory,
-      SchemaPlus defaultSchema,
+      PlannerContext plannerContext,
       String viewSql,
-      String mvTableName) throws SqlParseException {
+      String mvTableName) {
         // First we parse the view query and create the materialization object
         // 0. Recreate cluster
         Util.discard(mvTableName);
-        final RelNode queryRel = toRel(cluster, typeFactory, defaultSchema, viewSql);
+        final RelNode queryRel = plannerContext.createParser().rel(viewSql).rel;
         List<String> columnNames = Util.transform(queryRel.getRowType().getFieldList(), RelDataTypeField::getName);
         final SparkTable table = new SparkTable(viewSql, RelOptUtil.getFieldTypeList(queryRel.getRowType()), columnNames);
-        final RelNode viewScan = createMaterializedViewScan(cluster, typeFactory, table);
+        final RelNode viewScan = createMaterializedViewScan(plannerContext.getOptCluster(), plannerContext.getTypeFactory(), table);
         return new KylinRelOptMaterialization(viewScan, queryRel, null, ImmutableList.of("x", "y"));
     }
 }

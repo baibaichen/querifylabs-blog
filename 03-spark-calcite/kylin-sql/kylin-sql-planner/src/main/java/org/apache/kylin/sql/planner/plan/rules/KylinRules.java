@@ -1,15 +1,14 @@
 package org.apache.kylin.sql.planner.plan.rules;
 
 import com.google.common.collect.ImmutableList;
+import org.apache.calcite.rel.rules.CoreRules;
 import org.apache.kylin.sql.planner.plan.nodes.KylinProject;
 import org.apache.kylin.sql.planner.plan.nodes.KylinSort;
 import org.apache.kylin.sql.planner.plan.nodes.LogicalSpark;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.calcite.plan.RelOptRule;
 
 import java.util.List;
 
-@Slf4j
 public class KylinRules {
     private KylinRules() {}
 
@@ -53,5 +52,16 @@ public class KylinRules {
       KYLIN_SORT_RULE,
       KYLIN_JOIN_RULE,
       KYLIN_LIMIT_RULE
+    );
+
+    public static final List<RelOptRule> CANONICALIZE_RULES = ImmutableList.of(
+            CoreRules.FILTER_PROJECT_TRANSPOSE,
+            CoreRules.FILTER_MERGE,
+            CoreRules.FILTER_AGGREGATE_TRANSPOSE,
+            CoreRules.PROJECT_MERGE,
+            CoreRules.PROJECT_REMOVE,
+            CoreRules.AGGREGATE_PROJECT_PULL_UP_CONSTANTS,
+            CoreRules.JOIN_PROJECT_RIGHT_TRANSPOSE,
+            CoreRules.JOIN_PROJECT_LEFT_TRANSPOSE
     );
 }

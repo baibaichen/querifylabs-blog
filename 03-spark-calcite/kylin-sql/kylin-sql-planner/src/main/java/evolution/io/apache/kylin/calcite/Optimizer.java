@@ -3,66 +3,42 @@ package evolution.io.apache.kylin.calcite;
 import com.google.common.collect.ImmutableList;
 import evolution.LatticeFixer;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.calcite.adapter.java.JavaTypeFactory;
-import org.apache.calcite.avatica.util.Casing;
-import org.apache.calcite.config.CalciteConnectionConfig;
-import org.apache.calcite.config.CalciteConnectionConfigImpl;
-import org.apache.calcite.config.CalciteConnectionProperty;
-import org.apache.calcite.jdbc.CalciteSchema;
+import org.apache.calcite.jdbc.CalciteSchemaBuilder;
 import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
 import org.apache.calcite.materialize.Lattice;
-import org.apache.calcite.plan.Contexts;
 import org.apache.calcite.plan.ConventionTraitDef;
 import org.apache.calcite.plan.RegisterRules;
-import org.apache.calcite.plan.RelOptCluster;
-import org.apache.calcite.plan.RelOptCostImpl;
 import org.apache.calcite.plan.RelOptLattice;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.plan.volcano.DumperWrapper;
 import org.apache.calcite.plan.volcano.VolcanoPlanner;
-import org.apache.calcite.prepare.Prepare;
 import org.apache.calcite.rel.RelCollationTraitDef;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.RelRoot;
 import org.apache.calcite.rel.metadata.DefaultRelMetadataProvider;
-import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.schema.Schema;
-import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.parser.SqlParseException;
-import org.apache.calcite.sql.validate.SqlValidator;
-import org.apache.calcite.sql2rel.SqlToRelConverter;
-import org.apache.calcite.sql2rel.StandardConvertletTable;
 import org.apache.calcite.tools.Program;
 import org.apache.calcite.tools.Programs;
 import org.apache.calcite.util.Util;
+import org.apache.kylin.sql.planner.delegation.PlannerContext;
+import org.apache.kylin.sql.planner.parse.CalciteParser;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Collections;
 import java.util.List;
-import java.util.Properties;
 
 import static org.apache.kylin.sql.planner.plan.rules.KylinRules.KYLIN_RULES;
 
 @Slf4j
 public class Optimizer {
-    private final CalciteConnectionConfig config;
-    private final SqlValidator validator;
-    private final SqlToRelConverter converter;
+    private final CalciteParser parser;
     private final VolcanoPlanner planner;
     private final List<RelOptLattice> lattices;
 
-    public Optimizer(
-      CalciteConnectionConfig config,
-      SqlValidator validator,
-      SqlToRelConverter converter,
-      VolcanoPlanner planner,
-      List<RelOptLattice> lattices) {
-        this.config = config;
-        this.validator = validator;
-        this.converter = converter;
-        this.planner = planner;
+    public Optimizer(PlannerContext plannerContext, List<RelOptLattice> lattices) {
+        this.parser = plannerContext.createParser();
+        this.planner = plannerContext.getPlanner();
         this.lattices = lattices;
     }
     public static Optimizer of(String name, Schema schema) {
@@ -77,59 +53,34 @@ public class Optimizer {
       Schema schema,
       List<Lattice> lattices,
       boolean useKylin) {
-        JavaTypeFactory typeFactory = new JavaTypeFactoryImpl();
-
-        Properties configProperties = new Properties();
-        configProperties.put(CalciteConnectionProperty.CASE_SENSITIVE.camelName(), Boolean.FALSE.toString());
-        configProperties.put(CalciteConnectionProperty.UNQUOTED_CASING.camelName(), Casing.UNCHANGED.toString());
-        configProperties.put(CalciteConnectionProperty.QUOTED_CASING.camelName(), Casing.UNCHANGED.toString());
-        CalciteConnectionConfig config = new CalciteConnectionConfigImpl(configProperties);
-
-        CalciteSchema rootSchema = CalciteSchema.createRootSchema(false, false);
-        SchemaPlus root = rootSchema.plus();
-        SchemaPlus defaultSchema = root.add(name, schema);
-
-        Prepare.CatalogReader catalogReader = Utility.createCatalogReader(config, defaultSchema, typeFactory);
-        SqlValidator validator = Utility.createSqlValidator(config, catalogReader, typeFactory);
-
-        VolcanoPlanner planner = new VolcanoPlanner(RelOptCostImpl.FACTORY, Contexts.of(config));
+        PlannerContext plannerContext =
+          new PlannerContext(CalciteSchemaBuilder.asRootSchema(schema, name), new JavaTypeFactoryImpl());
+        VolcanoPlanner planner = plannerContext.getPlanner();
         planner.addRelTraitDef(ConventionTraitDef.INSTANCE);
         planner.addRelTraitDef(RelCollationTraitDef.INSTANCE);
         RegisterRules.registerDefaultRules(planner, false, false, !useKylin);
         if (useKylin) {
             KYLIN_RULES.forEach(planner::addRule);
         }
-        RelOptCluster cluster = RelOptCluster.create(planner, new RexBuilder(typeFactory));
-
-        SqlToRelConverter.Config converterConfig = SqlToRelConverter.config()
-          .withTrimUnusedFields(true)
-          .withExpand(false); // https://issues.apache.org/jira/browse/CALCITE-1045
-
-        SqlToRelConverter converter = new SqlToRelConverter(
-          null,
-          validator,
-          catalogReader,
-          cluster,
-          StandardConvertletTable.INSTANCE,
-          converterConfig);
 
         List<RelOptLattice> relOptLattices =
           Util.transform(lattices,
-            lattice -> new RelOptLattice(lattice, LatticeFixer.of(lattice, catalogReader, typeFactory)));
-        return new Optimizer(config, validator, converter, planner, relOptLattices);
+            lattice -> new RelOptLattice(lattice, LatticeFixer.of(lattice, plannerContext.createCatalogReader(), plannerContext.getTypeFactory())));
+
+        return new Optimizer(plannerContext, relOptLattices);
     }
 
-    public SqlNode parse(String sql) throws SqlParseException {
-        return Utility.parse(config, sql);
+    public SqlNode parse(String sql) {
+       return parser.parse(sql);
     }
 
     public SqlNode validate(SqlNode node) {
-        return validator.validate(node);
+        // nothing
+        return node;
     }
 
     public RelNode convert(SqlNode node) {
-        RelRoot root = converter.convertQuery(node, false, true);
-        return root.rel;
+        return parser.rel(node).rel;
     }
 
     public RelNode beforeOptimize(RelNode node, RelTraitSet requiredTraitSet) {

@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableList;
 import evolution.Debugger;
 import evolution.io.apache.kylin.calcite.Optimizer;
 import org.apache.kylin.test.Resource.LatticeHEP;
-import org.apache.kylin.test.Resource.Util;
+import org.apache.kylin.test.Resource.TPCH;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.calcite.adapter.enumerable.EnumerableConvention;
 import org.apache.calcite.config.CalciteConnectionConfig;
@@ -54,8 +54,8 @@ class TPCHLatticeSuggesterTest {
     }
     @TestFactory
     Stream<DynamicTest> tpchTest() {
-        return IntStream.range(0, 22).
-                mapToObj(i -> dynamicTest("LatticeSuggesterTest" + (i + 1), () -> getFirstLattice(Util.QUERIES.get(i))));
+        return IntStream.rangeClosed(1, 22).
+                mapToObj(i -> dynamicTest("LatticeSuggesterTest" + i, () -> getFirstLattice(TPCH.sql(i))));
     }
 
     @Test
@@ -179,7 +179,7 @@ class TPCHLatticeSuggesterTest {
               "    l_returnflag,\n" +
               "    l_linestatus";
             {
-                Optimizer optimizer = Optimizer.of("tpch", Util.TPCH_SCHEMA, ImmutableList.of(lattice));
+                Optimizer optimizer = Optimizer.of("tpch", TPCH.SCHEMA, ImmutableList.of(lattice));
                 final SqlNode node = optimizer.parse(sql);
                 final SqlNode node2 = optimizer.validate(node);
                 final RelNode root = optimizer.convert(node2);
@@ -219,7 +219,7 @@ class TPCHLatticeSuggesterTest {
 
         Tester tpch() {
             final SchemaPlus rootSchema = Frameworks.createRootSchema(true);
-            final SchemaPlus schema = rootSchema.add("tpch", Util.TPCH_SCHEMA);
+            final SchemaPlus schema = rootSchema.add("tpch", TPCH.SCHEMA);
             final FrameworkConfig config = Frameworks.newConfigBuilder()
                     .parserConfig(SqlParser.config().withCaseSensitive(false))
                     .statisticProvider(TPCHStatisticProvider.INSTANCE)

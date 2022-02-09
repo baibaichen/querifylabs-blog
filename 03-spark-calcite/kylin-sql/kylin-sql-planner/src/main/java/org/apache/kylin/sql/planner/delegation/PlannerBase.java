@@ -1,16 +1,21 @@
 package org.apache.kylin.sql.planner.delegation;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.apache.calcite.jdbc.CalciteSchema;
+import org.apache.calcite.jdbc.CalciteSchemaBuilder;
+import org.apache.kylin.sql.planner.calcite.SparkTypeFactory;
+import org.apache.kylin.sql.planner.catalog.SparkSessionCalciteSchema;
 import org.apache.kylin.sql.planner.plan.optimize.Optimizer;
 import org.apache.kylin.table.delegation.Planner;
 import org.apache.spark.sql.SparkSession;
 
 abstract class PlannerBase implements Planner {
 
-    private final PlannerContext plannerContext;
+    protected final PlannerContext plannerContext;
 
     protected PlannerBase(SparkSession session) {
-        plannerContext = new PlannerContext(session);
+        final CalciteSchema schema = CalciteSchemaBuilder.asRootSchema(new SparkSessionCalciteSchema(session));
+        plannerContext = new PlannerContext(schema, new SparkTypeFactory());
     }
 
     @VisibleForTesting

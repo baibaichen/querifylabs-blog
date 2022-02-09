@@ -1,7 +1,6 @@
 package org.apache.kylin.sql.planner.delegation;
 
 import com.google.common.collect.ImmutableList;
-import org.apache.kylin.sql.planner.parse.CalciteParser;
 import org.apache.kylin.core.Transformation;
 import org.apache.kylin.sql.planner.operations.PlannerQueryOperation;
 import org.apache.kylin.sql.planner.plan.optimize.CalciteOptimizer;
@@ -23,7 +22,7 @@ public class SparkBatchPlanner extends PlannerBase {
 
     @Override
     public Parser getParser() {
-        return new ParserImpl(this::createParser);
+        return new ParserImpl(plannerContext::createParser);
     }
 
     @Override
@@ -36,11 +35,6 @@ public class SparkBatchPlanner extends PlannerBase {
                 .map(relNode -> getOptimizer().optimize(relNode))
                 .map(Transformation::new)
                 .collect(Collectors.toList());
-    }
-
-    private CalciteParser createParser() {
-        PlannerContext context = getPlannerContext();
-        return new CalciteParser(context.createSqlValidator(context.createCatalogReader()), context.createCluster());
     }
 
     @Override

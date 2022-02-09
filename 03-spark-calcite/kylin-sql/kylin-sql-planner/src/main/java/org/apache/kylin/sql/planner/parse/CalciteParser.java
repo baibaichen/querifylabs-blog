@@ -1,7 +1,9 @@
 package org.apache.kylin.sql.planner.parse;
 
+import org.apache.calcite.sql.parser.SqlParseException;
+import org.apache.calcite.sql.parser.SqlParser;
+import org.apache.calcite.util.SourceStringReader;
 import org.apache.kylin.KylinSQLException;
-import evolution.Commons;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.prepare.CalciteCatalogReader;
 import org.apache.calcite.rel.RelRoot;
@@ -15,9 +17,39 @@ import org.apache.calcite.sql2rel.StandardConvertletTable;
 import org.apache.kylin.sql.planner.calcite.CalciteConfig;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
+import java.io.Reader;
+
 import static java.util.Objects.requireNonNull;
 
 public class CalciteParser {
+
+    /**
+     * Parses a SQL statement.
+     *
+     * @param qry Query string.
+     * @param parserCfg Parser config.
+     * @return Parsed query.
+     */
+   static SqlNodeList parse(String qry, SqlParser.Config parserCfg) {
+       try {
+            return parse(new SourceStringReader(qry), parserCfg);
+       } catch (SqlParseException e) {
+           throw new KylinSQLException("Failed to parse query.", e);
+       }
+   }
+
+    /**
+     * Parses a SQL statement.
+     *
+     * @param reader Source string reader.
+     * @param parserCfg Parser config.
+     * @return Parsed query.
+     * @throws SqlParseException on parse error.
+     */
+   static SqlNodeList parse(Reader reader, SqlParser.Config parserCfg) throws SqlParseException {
+       SqlParser parser = SqlParser.create(reader, parserCfg);
+       return parser.parseStmtList();
+   }
 
     /**
      * Visitor that throws exceptions for unsupported SQL features.
@@ -38,7 +70,7 @@ public class CalciteParser {
     }
 
     public SqlNode parse(String sql) {
-        SqlNodeList statements = Commons.parse(sql);
+        SqlNodeList statements = parse(sql, CalciteConfig.DEFAULT_PARSER_CONFIG);
         if (statements.size() != 1) {
             throw KylinSQLException.error(KylinSQLException.ErrorCode.PARSING,
                     "The command must contain a single statement");
@@ -53,6 +85,10 @@ public class CalciteParser {
     public RelRoot rel(SqlNode node) {
         SqlToRelConverter sqlToRelConverter = createSqlToRelConverter();
         return sqlToRelConverter.convertQuery(node, false, true);
+    }
+
+    public RelRoot rel(String sql) {
+        return rel(parse(sql));
     }
 
     private SqlToRelConverter createSqlToRelConverter() {
