@@ -2,9 +2,6 @@ package org.apache.kylin.sql.planner.plan.optimize;
 
 import evolution.Debugger;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.calcite.plan.hep.HepPlanner;
-import org.apache.calcite.plan.hep.HepProgram;
-import org.apache.calcite.plan.hep.HepProgramBuilder;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.rules.CoreRules;
 import org.apache.calcite.tools.RuleSet;
@@ -14,37 +11,13 @@ import org.apache.kylin.sql.planner.parse.CalciteParser;
 import org.apache.kylin.sql.planner.plan.optimize.program.KylinHepRuleSetProgram;
 import org.apache.kylin.sql.planner.plan.rules.JoinFilterTransposeRule;
 import org.apache.kylin.sql.planner.plan.rules.KylinRules;
+import org.apache.kylin.test.Resource.LatticeHEP;
 import org.apache.kylin.test.Resource.TPCH;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.jupiter.api.Test;
 
 @Slf4j
 class CanonicalizeTest {
-    private static final HepProgram HEP_PROGRAM =
-      new HepProgramBuilder()
-        .addRuleInstance(CoreRules.FILTER_PROJECT_TRANSPOSE)
-        .addRuleInstance(CoreRules.FILTER_MERGE)
-        .addRuleInstance(CoreRules.FILTER_INTO_JOIN)
-        .addRuleInstance(CoreRules.JOIN_CONDITION_PUSH)
-        .addRuleInstance(CoreRules.FILTER_AGGREGATE_TRANSPOSE)
-        .addRuleInstance(CoreRules.PROJECT_MERGE)
-        .addRuleInstance(CoreRules.PROJECT_REMOVE)
-        .addRuleInstance(CoreRules.PROJECT_JOIN_TRANSPOSE)
-        .addRuleInstance(CoreRules.PROJECT_SET_OP_TRANSPOSE)
-        .addRuleInstance(CoreRules.AGGREGATE_PROJECT_PULL_UP_CONSTANTS)
-//        .addRuleInstance(CoreRules.FILTER_TO_CALC)
-//        .addRuleInstance(CoreRules.PROJECT_TO_CALC)
-//        .addRuleInstance(CoreRules.FILTER_CALC_MERGE)
-//        .addRuleInstance(CoreRules.PROJECT_CALC_MERGE)
-//        .addRuleInstance(CoreRules.CALC_MERGE)
-        .build();
-
-    private static RelNode canonicalize(RelNode rel) {
-        final HepPlanner hepPlanner = new HepPlanner(HEP_PROGRAM);
-        hepPlanner.setRoot(rel);
-        return hepPlanner.findBestExp();
-    }
-
     @Test
     void testCanonicalize2() {
         final CalciteParser parser = TPCH.createCalciteParser();
@@ -52,7 +25,7 @@ class CanonicalizeTest {
         final RelNode node = parser.rel(sql2).rel;
         log.info("before:\n{}", Debugger.toString(node));
 
-        RelNode node2 = canonicalize(node);
+        RelNode node2 = LatticeHEP.substituteCanonicalize(node);
         log.info("after:\n{}", Debugger.toString(node2));
         log.info("after:\n{}", Debugger.toSql(node2));
     }

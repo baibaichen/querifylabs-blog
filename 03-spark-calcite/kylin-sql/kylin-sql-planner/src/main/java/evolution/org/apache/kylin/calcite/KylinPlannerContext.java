@@ -21,34 +21,27 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package evolution.io.apache.kylin.calcite.cost;
+package evolution.org.apache.kylin.calcite;
 
-import evolution.io.apache.kylin.calcite.KylinPlannerContext;
-import org.apache.calcite.plan.ConventionTraitDef;
-import org.apache.calcite.plan.RelOptPlanner;
-import org.apache.calcite.plan.volcano.VolcanoPlanner;
-import org.apache.calcite.rel.RelCollationTraitDef;
-import org.apache.calcite.rel.RelDistributionTraitDef;
+import org.apache.calcite.config.CalciteConnectionConfig;
+import org.apache.calcite.plan.Context;
+import org.apache.calcite.util.CancelFlag;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
-/**
- * Refer to <code>HiveVolcanoPlanner</code>, now only implement {@link #createPlanner}
- */
-public class KylinVolcanoPlanner {
+public class KylinPlannerContext implements Context {
+    private final CalciteConnectionConfig config;
 
-    private KylinVolcanoPlanner(){}
+    public KylinPlannerContext(CalciteConnectionConfig config) {
+        this.config = config;
+    }
 
-    private static final boolean ENABLE_COLLATION_TRAIT = true;
-    private static final boolean ENABLE_DISTRIBUTION_TRAIT = false;
-
-    public static RelOptPlanner createPlanner(KylinPlannerContext conf) {
-        RelOptPlanner planner = new VolcanoPlanner(conf);
-        planner.addRelTraitDef(ConventionTraitDef.INSTANCE);
-        if (ENABLE_COLLATION_TRAIT) {
-            planner.addRelTraitDef(RelCollationTraitDef.INSTANCE);
+    @Override
+    public <C> @Nullable C unwrap(Class<C> aClass) {
+        if (aClass.isInstance(config)) {
+            return aClass.cast(config);
         }
-        if (ENABLE_DISTRIBUTION_TRAIT) {
-            planner.addRelTraitDef(RelDistributionTraitDef.INSTANCE);
-        }
-        return planner;
+        if (aClass == CancelFlag.class)
+            return null;
+        throw new UnsupportedOperationException();
     }
 }

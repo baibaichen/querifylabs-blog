@@ -1,7 +1,7 @@
-package evolution.io.apache.kylin.calcite;
+package evolution.org.apache.kylin.calcite;
 
 import com.google.common.collect.ImmutableList;
-import evolution.LatticeFixer;
+import evolution.LatticeFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.calcite.jdbc.CalciteSchemaBuilder;
 import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
@@ -48,13 +48,9 @@ public class Optimizer {
         return of(name, schema, lattices, false);
     }
 
-    public static Optimizer of(
-      String name,
-      Schema schema,
-      List<Lattice> lattices,
-      boolean useKylin) {
+    public static Optimizer of(String name, Schema schema, List<Lattice> lattices, boolean useKylin) {
         PlannerContext plannerContext =
-          new PlannerContext(CalciteSchemaBuilder.asRootSchema(schema, name), new JavaTypeFactoryImpl());
+          new PlannerContext(CalciteSchemaBuilder.createRootSchemaWithChild(schema, name), new JavaTypeFactoryImpl());
         VolcanoPlanner planner = plannerContext.getPlanner();
         planner.addRelTraitDef(ConventionTraitDef.INSTANCE);
         planner.addRelTraitDef(RelCollationTraitDef.INSTANCE);
@@ -65,7 +61,7 @@ public class Optimizer {
 
         List<RelOptLattice> relOptLattices =
           Util.transform(lattices,
-            lattice -> new RelOptLattice(lattice, LatticeFixer.of(lattice, plannerContext.createCatalogReader(), plannerContext.getTypeFactory())));
+            lattice -> new RelOptLattice(lattice, LatticeFactory.create(lattice, plannerContext.createCatalogReader(), plannerContext.getTypeFactory())));
 
         return new Optimizer(plannerContext, relOptLattices);
     }

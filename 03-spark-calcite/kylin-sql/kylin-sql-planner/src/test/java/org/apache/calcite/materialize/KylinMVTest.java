@@ -21,12 +21,11 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.apache.kylin.calcite;
+package org.apache.calcite.materialize;
 
 import com.google.common.collect.ImmutableList;
-import evolution.io.apache.kylin.meta.KylinMaterializedViewsRegistry;
-import evolution.io.apache.kylin.meta.KylinRelOptMaterialization;
-import org.apache.kylin.sql.planner.calcite.CalciteConfig;
+import evolution.org.apache.kylin.meta.KylinMaterializedViewsRegistry;
+import evolution.org.apache.kylin.meta.KylinRelOptMaterialization;
 import org.apache.kylin.sql.planner.delegation.PlannerContext;
 import org.apache.kylin.sql.planner.plan.nodes.KylinTableScan;
 import org.apache.kylin.sql.planner.plan.nodes.LogicalSpark;
@@ -50,7 +49,7 @@ class KylinMVTest {
     @Test
     void test_sql1() {
         final String sql = TPCH.sql(1);
-        KylinMaterializedViewsRegistry viewRegistry = new KylinMaterializedViewsRegistry(CalciteConfig.DEFAULT_CONNECTION_CONFIG);
+        KylinMaterializedViewsRegistry viewRegistry = new KylinMaterializedViewsRegistry();
         PlannerContext plannerContext = TPCH.newPlannerContext();
         KylinRelOptMaterialization x = viewRegistry.createMaterialization(plannerContext, VIEW_SQL, "x");
         assertNotNull(x);
@@ -66,8 +65,7 @@ class KylinMVTest {
         RelTraitSet traitSet = queryRel.getCluster().traitSet().replace(LogicalSpark.INSTANCE);
         RegisterRules.registerDefaultRules(planner, true, false, false);
         KYLIN_RULES.forEach(planner::addRule);
-        return Programs
-          .standard()
-          .run(planner, queryRel, traitSet, ImmutableList.of(materialization), ImmutableList.of());
+        return Programs.standard()
+                .run(planner, queryRel, traitSet, ImmutableList.of(materialization), ImmutableList.of());
     }
 }

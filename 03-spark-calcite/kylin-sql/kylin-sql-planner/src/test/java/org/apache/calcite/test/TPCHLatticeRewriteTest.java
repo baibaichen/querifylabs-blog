@@ -91,15 +91,22 @@ public class TPCHLatticeRewriteTest {
 
     @Test
     void testLatticeStarTable2() {
+        final String sql =
+                "select count(*) from TPCH_01.customer c \n" +
+                        "  inner join TPCH_01.orders o   on c.c_custkey = o.o_custkey\n" +
+                        "  inner join TPCH_01.lineitem l on o.o_orderkey = l.l_orderkey\n" +
+                        "  inner join TPCH_01.supplier s on l.l_suppkey = s.s_suppkey\n" +
+                        "  inner join TPCH_01.nation n   on  s.s_nationkey = n.n_nationkey\n" +
+                        "  inner join TPCH_01.region r   on  n.n_regionkey = r.r_regionkey";
             tpchModel()
-                    .query("select count(*) from \"adhoc\".\"star\"")
+                    .query(sql)
                     .enableMaterializations(true)
                     .explainContains("EnumerableTableScan(table=[[adhoc, m{}]])");
     }
     private static CalciteAssert.AssertThat tpchModel(){
         final String extra =
                 "auto: true,\n" +
-                "algorithm: true,\n" +
+                "algorithm: false,\n" +
                 "defaultMeasures: [ {agg: 'count'} ]";
         final String sql =
                 "select 1 from TPCH_01.customer c \n" +

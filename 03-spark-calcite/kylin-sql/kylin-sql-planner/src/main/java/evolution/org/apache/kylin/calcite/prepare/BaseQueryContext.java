@@ -1,4 +1,4 @@
-package evolution.io.apache.kylin.calcite.prepare;
+package evolution.org.apache.kylin.calcite.prepare;
 
 import org.apache.calcite.avatica.util.Casing;
 import org.apache.calcite.config.CalciteConnectionConfig;

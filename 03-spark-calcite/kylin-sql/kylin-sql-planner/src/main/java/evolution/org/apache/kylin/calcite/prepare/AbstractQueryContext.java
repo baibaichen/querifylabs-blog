@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package evolution.io.apache.kylin.calcite.prepare;
+package evolution.org.apache.kylin.calcite.prepare;
 
 import org.apache.calcite.plan.Context;
 

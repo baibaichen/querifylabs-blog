@@ -21,14 +21,11 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package evolution.io.apache.kylin.meta;
+package evolution.org.apache.kylin.meta;
 
 import com.google.common.collect.ImmutableList;
-import org.apache.kylin.sql.planner.calcite.RelOptKylinTable;
 import org.apache.kylin.sql.planner.delegation.PlannerContext;
 import org.apache.kylin.sql.planner.plan.nodes.KylinTableScan;
-import org.apache.kylin.sql.planner.catalog.SparkTable;
-import org.apache.calcite.config.CalciteConnectionConfig;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
@@ -50,24 +47,18 @@ import java.util.List;
  */
 public class KylinMaterializedViewsRegistry {
 
-    private final CalciteConnectionConfig config;
-    public KylinMaterializedViewsRegistry(
-      CalciteConnectionConfig config) {
-        this.config = config;
-    }
-
     /**
      * Create materialized {@link TableScan}
      * @param cluster what does cluster mean?
-     * @param table  Repesent materialized table in the spark, it should be {@link SparkTable}
+     * @param table  Repesent materialized table in the spark, it should be {@link KylinModelTable}
      * @return calcite relation operator
      */
     public static RelNode createMaterializedViewScan(
       RelOptCluster cluster,
       RelDataTypeFactory typeFactory,
       Table table) {
-        RelOptKylinTable relTable =
-          new RelOptKylinTable(null, table.getRowType(typeFactory), ImmutableList.of("x", "y"), table);
+        RelOptKylinModelTable relTable =
+          new RelOptKylinModelTable(null, table.getRowType(typeFactory), ImmutableList.of("x", "y"), table);
         return KylinTableScan.create(cluster, relTable);
     }
 
@@ -78,12 +69,10 @@ public class KylinMaterializedViewsRegistry {
       PlannerContext plannerContext,
       String viewSql,
       String mvTableName) {
-        // First we parse the view query and create the materialization object
-        // 0. Recreate cluster
         Util.discard(mvTableName);
         final RelNode queryRel = plannerContext.createParser().rel(viewSql).rel;
         List<String> columnNames = Util.transform(queryRel.getRowType().getFieldList(), RelDataTypeField::getName);
-        final SparkTable table = new SparkTable(viewSql, RelOptUtil.getFieldTypeList(queryRel.getRowType()), columnNames);
+        final KylinModelTable table = new  KylinModelTable(viewSql, RelOptUtil.getFieldTypeList(queryRel.getRowType()), columnNames, null);
         final RelNode viewScan = createMaterializedViewScan(plannerContext.getOptCluster(), plannerContext.getTypeFactory(), table);
         return new KylinRelOptMaterialization(viewScan, queryRel, null, ImmutableList.of("x", "y"));
     }

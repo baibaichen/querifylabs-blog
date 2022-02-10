@@ -1,4 +1,4 @@
-package org.apache.kylin.sql.planner.calcite;
+package evolution.org.apache.kylin.meta;
 
 import com.google.common.collect.ImmutableList;
 import org.apache.calcite.jdbc.CalciteSchema;
@@ -16,7 +16,6 @@ import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.schema.ColumnStrategy;
 import org.apache.calcite.schema.Schemas;
 import org.apache.calcite.schema.Table;
-import org.apache.calcite.schema.TranslatableTable;
 import org.apache.calcite.schema.Wrapper;
 import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.calcite.util.Util;
@@ -26,14 +25,14 @@ import java.util.List;
 
 import static java.util.Objects.requireNonNull;
 
-public class RelOptKylinTable implements RelOptTable  {
+public class RelOptKylinModelTable implements RelOptTable  {
 
     private final @Nullable RelOptSchema schema;
     private final RelDataType            rowType;
     private final List<String>           qualifiedTblName;
     private final Table                  table;
 
-    public RelOptKylinTable(
+    public RelOptKylinModelTable(
             @Nullable RelOptSchema schema,
             RelDataType rowType,
             List<String> qualifiedTblName,
@@ -67,9 +66,9 @@ public class RelOptKylinTable implements RelOptTable  {
 
     @Override
     public RelNode toRel(ToRelContext context) {
-        if (table instanceof TranslatableTable) {
-            return ((TranslatableTable) table).toRel(context, this);
-        }
+//        if (table instanceof TranslatableTable) {
+//            return ((TranslatableTable) table).toRel(context, this);
+//        }
         // TODO: return KylinTableScan?
         return LogicalTableScan.create(context.getCluster(), this, context.getTableHints());
     }

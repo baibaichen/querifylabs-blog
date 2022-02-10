@@ -19,6 +19,9 @@
 package org.apache.calcite.jdbc;
 
 import org.apache.calcite.schema.Schema;
+import org.apache.calcite.schema.SchemaPlus;
+
+import static org.apache.calcite.tools.Frameworks.createRootSchema;
 
 /** This class is used to create a {@link CalciteSchema} with a given {@link Schema} as the root. */
 public class CalciteSchemaBuilder {
@@ -32,8 +35,10 @@ public class CalciteSchemaBuilder {
     public static CalciteSchema asRootSchema(Schema root) {
         return new SimpleCalciteSchema(null, root, "");
     }
-    public static CalciteSchema asRootSchema(Schema root, String name) {
-        return new SimpleCalciteSchema(null, root, name);
+    public static CalciteSchema createRootSchemaWithChild(Schema child, String name) {
+        SchemaPlus root = createRootSchema(false);
+        root.add(name, child);
+        return  CalciteSchema.from(root);
     }
 
     private CalciteSchemaBuilder() {}

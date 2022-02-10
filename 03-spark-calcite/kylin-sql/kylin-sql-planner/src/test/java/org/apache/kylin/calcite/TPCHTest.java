@@ -1,7 +1,7 @@
 package org.apache.kylin.calcite;
 
 import com.google.common.collect.ImmutableList;
-import evolution.io.apache.kylin.calcite.Optimizer;
+import evolution.org.apache.kylin.calcite.Optimizer;
 import org.apache.kylin.sql.planner.plan.nodes.LogicalSpark;
 import org.apache.kylin.test.Resource.TPCH;
 import lombok.extern.slf4j.Slf4j;

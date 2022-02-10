@@ -21,27 +21,28 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package evolution.io.apache.kylin.calcite;
+package evolution.org.apache.kylin.meta;
 
-import org.apache.calcite.config.CalciteConnectionConfig;
-import org.apache.calcite.plan.Context;
-import org.apache.calcite.util.CancelFlag;
+import org.apache.calcite.plan.RelOptMaterialization;
+import org.apache.calcite.plan.RelOptTable;
+import org.apache.calcite.rel.RelNode;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class KylinPlannerContext implements Context {
-    private final CalciteConnectionConfig config;
+import java.util.List;
 
-    public KylinPlannerContext(CalciteConnectionConfig config) {
-        this.config = config;
-    }
+/**
+ * Kylin extension of {@link RelOptMaterialization}.
+ */
+public class KylinRelOptMaterialization extends RelOptMaterialization  {
 
-    @Override
-    public <C> @Nullable C unwrap(Class<C> aClass) {
-        if (aClass.isInstance(config)) {
-            return aClass.cast(config);
-        }
-        if (aClass == CancelFlag.class)
-            return null;
-        throw new UnsupportedOperationException();
+    /**
+     * Creates a KylinRelOptMaterialization.
+     */
+    public KylinRelOptMaterialization(
+      RelNode tableRel,
+      RelNode queryRel,
+      @Nullable RelOptTable starRelOptTable,
+      List<String> qualifiedTableName) {
+        super(tableRel, queryRel, starRelOptTable, qualifiedTableName);
     }
 }

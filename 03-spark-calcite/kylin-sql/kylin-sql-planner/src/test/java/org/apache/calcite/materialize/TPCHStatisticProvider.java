@@ -1,11 +1,10 @@
-package org.apache.kylin.calcite;
+package org.apache.calcite.materialize;
 
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import org.apache.calcite.adapter.jdbc.JdbcTable;
-import org.apache.calcite.materialize.SqlStatisticProvider;
 import org.apache.calcite.plan.RelOptTable;
 
 import java.util.Arrays;

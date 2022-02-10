@@ -21,28 +21,34 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package evolution.io.apache.kylin.meta;
+package evolution.org.apache.kylin.calcite.cost;
 
-import org.apache.calcite.plan.RelOptMaterialization;
-import org.apache.calcite.plan.RelOptTable;
-import org.apache.calcite.rel.RelNode;
-import org.checkerframework.checker.nullness.qual.Nullable;
-
-import java.util.List;
+import evolution.org.apache.kylin.calcite.KylinPlannerContext;
+import org.apache.calcite.plan.ConventionTraitDef;
+import org.apache.calcite.plan.RelOptPlanner;
+import org.apache.calcite.plan.volcano.VolcanoPlanner;
+import org.apache.calcite.rel.RelCollationTraitDef;
+import org.apache.calcite.rel.RelDistributionTraitDef;
 
 /**
- * Kylin extension of {@link RelOptMaterialization}.
+ * Refer to <code>HiveVolcanoPlanner</code>, now only implement {@link #createPlanner}
  */
-public class KylinRelOptMaterialization extends RelOptMaterialization  {
+public class KylinVolcanoPlanner {
 
-    /**
-     * Creates a KylinRelOptMaterialization.
-     */
-    public KylinRelOptMaterialization(
-      RelNode tableRel,
-      RelNode queryRel,
-      @Nullable RelOptTable starRelOptTable,
-      List<String> qualifiedTableName) {
-        super(tableRel, queryRel, starRelOptTable, qualifiedTableName);
+    private KylinVolcanoPlanner(){}
+
+    private static final boolean ENABLE_COLLATION_TRAIT = true;
+    private static final boolean ENABLE_DISTRIBUTION_TRAIT = false;
+
+    public static RelOptPlanner createPlanner(KylinPlannerContext conf) {
+        RelOptPlanner planner = new VolcanoPlanner(conf);
+        planner.addRelTraitDef(ConventionTraitDef.INSTANCE);
+        if (ENABLE_COLLATION_TRAIT) {
+            planner.addRelTraitDef(RelCollationTraitDef.INSTANCE);
+        }
+        if (ENABLE_DISTRIBUTION_TRAIT) {
+            planner.addRelTraitDef(RelDistributionTraitDef.INSTANCE);
+        }
+        return planner;
     }
 }

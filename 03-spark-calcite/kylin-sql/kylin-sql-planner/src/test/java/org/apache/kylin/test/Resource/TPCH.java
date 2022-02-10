@@ -3,16 +3,13 @@ package org.apache.kylin.test.Resource;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import org.apache.calcite.adapter.tpch.TpchSchema;
-import org.apache.calcite.jdbc.CalciteSchema;
+import org.apache.calcite.jdbc.CalciteSchemaBuilder;
 import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
 import org.apache.calcite.schema.Schema;
-import org.apache.calcite.schema.SchemaPlus;
 import org.apache.kylin.sql.planner.delegation.PlannerContext;
 import org.apache.kylin.sql.planner.parse.CalciteParser;
 
 import java.util.List;
-
-import static org.apache.calcite.tools.Frameworks.createRootSchema;
 
 public class TPCH {
     public static final String NAME_01 = "TPCH_01";
@@ -723,8 +720,7 @@ public class TPCH {
     }
 
     public static PlannerContext newPlannerContext(){
-        final SchemaPlus schema = createRootSchema(false).add("tpch", SCHEMA);
-       return new PlannerContext(CalciteSchema.from(schema), new JavaTypeFactoryImpl());
+       return new PlannerContext(CalciteSchemaBuilder.createRootSchemaWithChild(SCHEMA, "tpch"), new JavaTypeFactoryImpl());
     }
 
     public static CalciteParser createCalciteParser() {
