@@ -1,5 +1,6 @@
 package org.apache.kylin.sql.planner.delegation;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
@@ -74,7 +75,7 @@ public class PlannerContext {
         return SqlValidatorUtil.newValidator(opTab, catalogReader, typeFactory, CalciteConfig.DEFAULT_VALIDATOR_CONFIG);
     }
 
-    private RelOptCluster createCluster() {
+    public RelOptCluster createCluster() {
         VolcanoPlanner planner = new VolcanoPlanner(RelOptCostImpl.FACTORY,
                 Contexts.of(CalciteConfig.DEFAULT_CONNECTION_CONFIG));
         planner.addRelTraitDef(ConventionTraitDef.INSTANCE);
@@ -84,6 +85,11 @@ public class PlannerContext {
 
     public CalciteParser createParser() {
         return new CalciteParser(createSqlValidator(), optClusterSupplier.get());
+    }
+
+    @VisibleForTesting
+    public CalciteSchema getRootSchema() {
+        return rootSchema;
     }
 
     public RelDataTypeFactory getTypeFactory() {

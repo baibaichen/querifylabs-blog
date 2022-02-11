@@ -23,10 +23,15 @@
  */
 package evolution.org.apache.kylin.meta;
 
+import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptMaterialization;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.core.Filter;
+import org.apache.calcite.rel.core.Project;
+import org.apache.kylin.sql.planner.plan.nodes.KylinTableScan;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.sparkproject.guava.base.Preconditions;
 
 import java.util.List;
 
@@ -44,5 +49,27 @@ public class KylinRelOptMaterialization extends RelOptMaterialization  {
       @Nullable RelOptTable starRelOptTable,
       List<String> qualifiedTableName) {
         super(tableRel, queryRel, starRelOptTable, qualifiedTableName);
+    }
+
+
+    /**
+     * Method that will recreate the plan rooted at node using the cluster given
+     * as a parameter.
+     */
+    private static RelNode copyNodeNewCluster(RelOptCluster optCluster, RelNode node) {
+        if (node instanceof Filter) {
+            throw new UnsupportedOperationException();
+        } else if (node instanceof Project) {
+            throw new UnsupportedOperationException();
+        } else {
+            Preconditions.checkArgument(node instanceof KylinTableScan);
+            KylinTableScan kylinTableScan = (KylinTableScan) node;
+            return KylinTableScan.create(optCluster, kylinTableScan.getTable());
+        }
+    }
+
+    public KylinRelOptMaterialization clone(RelOptCluster optCluster) {
+        RelNode newScan = copyNodeNewCluster(optCluster, tableRel);
+        return new KylinRelOptMaterialization(newScan, queryRel, starRelOptTable, qualifiedTableName);
     }
 }

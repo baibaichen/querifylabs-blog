@@ -184,7 +184,7 @@ class TPCHLatticeSuggesterTest {
                 final RelNode root = optimizer.convert(node2);
                 RelTraitSet traitSet = root.getTraitSet().replace(EnumerableConvention.INSTANCE);
                 RelNode optimized =  optimizer.optimize(root, traitSet, true);
-                log.info(Debugger.toSql(optimized));
+                log.info(Debugger.toSparkSql(optimized));
             }
 //            StarTable table = lattice.createStarTable();
 //            RelDataType rowType = table.getRowType(planner.getTypeFactory());

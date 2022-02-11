@@ -71,7 +71,7 @@ public class LatticeHEP {
                 new HepPlanner(PROGRAM, null, true, null, RelOptCostImpl.FACTORY);
         planner.setRoot(r);
         final RelNode r2 = planner.findBestExp();
-        return Debugger.toSql(r2);
+        return Debugger.toSparkSql(r2);
     }
 
 

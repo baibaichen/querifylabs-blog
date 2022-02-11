@@ -20,9 +20,14 @@ public class Debugger {
                         SqlExplainLevel.EXPPLAN_ATTRIBUTES));
     }
 
-    /** Converts a relational expression to SQL. */
-    public static String toSql(RelNode root) {
+    /** Converts a relational expression to Spark SQL. */
+    public static String toSparkSql(RelNode root) {
         return toSql(root, SqlDialect.DatabaseProduct.SPARK.getDialect());
+    }
+
+    /** Converts a relational expression to Mysql SQL. */
+    public static String toPostgreSQL(RelNode root) {
+        return toSql(root, SqlDialect.DatabaseProduct.POSTGRESQL.getDialect());
     }
 
     /** Converts a relational expression to SQL in a given dialect. */

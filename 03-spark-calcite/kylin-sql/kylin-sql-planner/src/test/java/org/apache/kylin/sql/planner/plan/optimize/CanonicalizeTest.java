@@ -27,7 +27,7 @@ class CanonicalizeTest {
 
         RelNode node2 = LatticeHEP.substituteCanonicalize(node);
         log.info("after:\n{}", Debugger.toString(node2));
-        log.info("after:\n{}", Debugger.toSql(node2));
+        log.info("after:\n{}", Debugger.toSparkSql(node2));
     }
 
     @Test
@@ -45,7 +45,7 @@ class CanonicalizeTest {
         String sql2 = "select l.l_suppkey, count(*) from (select l_suppkey, l_partkey, l_linenumber + 2 as x from tpch.lineitem) l inner join tpch.part p on l.l_partkey = p.p_partkey where l.x > 1000 group by l.l_suppkey";
         String sql3 = "select * from (select *, l_linenumber + 2 as x from tpch.lineitem) l  where l.x > 1000";
         String sql4 = "select l.x, count(*) from (select l_suppkey, l_partkey, l_linenumber + 2 as x from tpch.lineitem) l inner join tpch.part p on l.l_partkey = p.p_partkey where l.x > 1000 group by l.x";
-        final RelNode node = parser.rel(sql2).rel;
+        final RelNode node = parser.rel(TPCH.sql(9)).rel;
         log.info("before:\n{}", Debugger.toString(node));
 
         KylinContext context = new KylinContext() {
@@ -69,7 +69,7 @@ class CanonicalizeTest {
 
         RelNode node2 = program.optimize(node, context);
         log.info("after:\n{}", Debugger.toString(node2));
-        log.info("after:\n{}", Debugger.toSql(node2));
+        log.info("after:\n{}", Debugger.toPostgreSQL(node2));
 
         RuleSet pullFilter = RuleSets.ofList(
                 JoinFilterTransposeRule.Config.LEFT.toRule()
@@ -82,7 +82,7 @@ class CanonicalizeTest {
 
         RelNode node3 = program2.optimize(node2, context);
         log.info("after pull:\n{}", Debugger.toString(node3));
-        log.info("after pull:\n{}", Debugger.toSql(node3));
+        log.info("after pull:\n{}", Debugger.toPostgreSQL(node3));
     }
 
 }

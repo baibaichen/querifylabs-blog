@@ -8,12 +8,13 @@ import org.apache.calcite.jdbc.CalciteSchemaBuilder;
 import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
 import org.apache.calcite.plan.RelOptLattice;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.schema.impl.AbstractSchema;
 import org.apache.kylin.sql.planner.delegation.PlannerContext;
 import org.apache.kylin.test.Resource.LatticeHEP;
 import org.apache.kylin.test.Resource.TPCH;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+
+import static org.apache.calcite.materialize.ModelBuilder.LINEITEM_PART_MODEL;
 
 @Slf4j
 public class SelectModelTest {
@@ -57,23 +58,20 @@ public class SelectModelTest {
         RelNode rewriteRel = relOptLattice.rewrite(LatticeHEP.toLeafJoinForm(rel));
         Assertions.assertNotNull(rewriteRel);
         log.info("Rewrite plan :\n {}", Debugger.toString(rewriteRel));
-        log.info(" Rewrite SQL :\n {}", Debugger.toSql(rewriteRel));
+        log.info(" Rewrite SQL :\n {}", Debugger.toSparkSql(rewriteRel));
         RelNode leafAgain2 = LatticeHEP.toLeafJoinForm(rewriteRel);
         log.info("Rewrite to Leaf plan :\n {}", Debugger.toString(leafAgain2));
-        log.info(" Rewrite to Leaf SQL :\n {}", Debugger.toSql(leafAgain2));
+        log.info(" Rewrite to Leaf SQL :\n {}", Debugger.toSparkSql(leafAgain2));
     }
 
     @Test
     void testAddModelIntoSchema() {
-        CalciteSchema calciteSchema = CalciteSchemaBuilder.createRootSchemaWithChild(TPCH.SCHEMA, TPCH.NAME_01);
-        Lattice.Builder latticeBuilder = Lattice.builder(new LatticeSpace(TPCHStatisticProvider.INSTANCE) ,calciteSchema, MODEL_SQL);
-        Lattice lattice = latticeBuilder.build();
-        CalciteSchema adhoc = calciteSchema.add("adhoc", new AbstractSchema());
-        adhoc.add("base_view_mv", LatticeFactory.createKylinModelTable(lattice));
+        PlannerContext plannerContext = new ModelBuilder.ContextBuilder()
+          .setSchemaName("adhoc")
+          .setModelSQL("base_view_mv", LINEITEM_PART_MODEL)
+          .buildPlannerContext();
 
-        PlannerContext plannerContext = new PlannerContext(calciteSchema, new JavaTypeFactoryImpl());
-
-        RelNode rel = plannerContext.createParser().rel("select count(*) from adhoc.base_view_mv group by C_CUSTKEY").rel;
+        RelNode rel = plannerContext.createParser().rel("select count(*) from adhoc.base_view_mv group by p_type").rel;
         Assertions.assertNotNull(rel);
         log.info("CANONICALIZE PLAN :\n {}", Debugger.toString((LatticeHEP.toLeafJoinForm(rel))));
     }

@@ -119,4 +119,15 @@ public class ProgramsCopied {
           program1
         );
     }
+
+    public static Program RewriteCorrelatedScalarSubQuery() {
+        return RewriteCorrelatedScalarSubQuery(DefaultRelMetadataProvider.INSTANCE);
+    }
+    public static Program RewriteCorrelatedScalarSubQuery(RelMetadataProvider metadataProvider) {
+        return sequence(
+          subQuery(metadataProvider),
+          new DecorrelateProgram(),
+          new TrimFieldsProgram()
+        );
+    }
 }
