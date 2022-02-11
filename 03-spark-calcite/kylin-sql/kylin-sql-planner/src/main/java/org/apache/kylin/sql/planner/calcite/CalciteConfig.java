@@ -119,6 +119,9 @@ public class CalciteConfig {
         connectionProperties.put(CalciteConnectionProperty.UNQUOTED_CASING.camelName(), unquotedCasing.toString());
         connectionProperties.put(CalciteConnectionProperty.QUOTED_CASING.camelName(), quotedCasing.toString());
         connectionProperties.put(CalciteConnectionProperty.QUOTING.camelName(), quoting.toString());
+
+        // disable Substitution
+        connectionProperties.put(CalciteConnectionProperty.MATERIALIZATIONS_ENABLED.camelName(), Boolean.toString(false));
         return new CalciteConnectionConfigImpl(connectionProperties);
     }
 }
