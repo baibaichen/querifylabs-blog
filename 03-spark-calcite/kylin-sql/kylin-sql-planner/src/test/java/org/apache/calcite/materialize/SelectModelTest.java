@@ -20,7 +20,7 @@ import static org.apache.calcite.materialize.ModelBuilder.LINEITEM_PART_MODEL;
 public class SelectModelTest {
 
     static final String MODEL_SQL =
-            "select 1 from TPCH_01.customer c \n" +
+            "select * from TPCH_01.customer c \n" +
                     "  inner join TPCH_01.orders o   on c.c_custkey = o.o_custkey\n" +
                     "  inner join TPCH_01.lineitem l on o.o_orderkey = l.l_orderkey\n" +
                     "  inner join TPCH_01.supplier s on l.l_suppkey = s.s_suppkey\n" +

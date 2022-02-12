@@ -56,9 +56,10 @@ public class KylinMaterializedViewsRegistry {
     public static RelNode createMaterializedViewScan(
       RelOptCluster cluster,
       RelDataTypeFactory typeFactory,
+      List<String> qualifiedTableName,
       Table table) {
         RelOptKylinModelTable relTable =
-          new RelOptKylinModelTable(null, table.getRowType(typeFactory), ImmutableList.of("x", "y"), table);
+          new RelOptKylinModelTable(null, table.getRowType(typeFactory), qualifiedTableName, table);
         return KylinTableScan.create(cluster, relTable);
     }
 
@@ -73,7 +74,20 @@ public class KylinMaterializedViewsRegistry {
         final RelNode queryRel = plannerContext.createParser().rel(viewSql).rel;
         List<String> columnNames = Util.transform(queryRel.getRowType().getFieldList(), RelDataTypeField::getName);
         final KylinModelTable table = new  KylinModelTable(viewSql, RelOptUtil.getFieldTypeList(queryRel.getRowType()), columnNames, null);
-        final RelNode viewScan = createMaterializedViewScan(plannerContext.getOptCluster(), plannerContext.getTypeFactory(), table);
+        final RelNode viewScan = createMaterializedViewScan(plannerContext.getOptCluster(), plannerContext.getTypeFactory(), ImmutableList.of("x", "y"), table);
         return new KylinRelOptMaterialization(viewScan, queryRel, null, ImmutableList.of("x", "y"));
     }
+
+    public static KylinRelOptMaterialization createMaterialization(
+      PlannerContext plannerContext,
+      RelNode queryRel,
+      List<String> qualifiedTableName) {
+        List<String> columnNames =
+          Util.transform(queryRel.getRowType().getFieldList(), RelDataTypeField::getName);
+        final KylinModelTable table =
+          new KylinModelTable("", RelOptUtil.getFieldTypeList(queryRel.getRowType()), columnNames, null);
+        final RelNode viewScan = createMaterializedViewScan(plannerContext.getOptCluster(), plannerContext.getTypeFactory(), qualifiedTableName, table);
+        return new KylinRelOptMaterialization(viewScan, queryRel, null, qualifiedTableName);
+    }
+
 }

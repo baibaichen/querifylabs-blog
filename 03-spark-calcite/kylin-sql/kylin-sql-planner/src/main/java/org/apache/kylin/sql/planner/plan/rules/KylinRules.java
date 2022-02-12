@@ -54,14 +54,43 @@ public class KylinRules {
       KYLIN_LIMIT_RULE
     );
 
+
     public static final List<RelOptRule> CANONICALIZE_RULES = ImmutableList.of(
-            CoreRules.FILTER_PROJECT_TRANSPOSE,
-            CoreRules.FILTER_MERGE,
-            CoreRules.FILTER_AGGREGATE_TRANSPOSE,
-            CoreRules.PROJECT_MERGE,
-            CoreRules.PROJECT_REMOVE,
-            CoreRules.AGGREGATE_PROJECT_PULL_UP_CONSTANTS,
-            CoreRules.JOIN_PROJECT_RIGHT_TRANSPOSE,
-            CoreRules.JOIN_PROJECT_LEFT_TRANSPOSE
+      CoreRules.FILTER_PROJECT_TRANSPOSE,
+      CoreRules.FILTER_MERGE,
+      CoreRules.FILTER_AGGREGATE_TRANSPOSE,
+      CoreRules.PROJECT_MERGE,
+      CoreRules.PROJECT_REMOVE,
+      CoreRules.AGGREGATE_PROJECT_PULL_UP_CONSTANTS,
+      CoreRules.JOIN_PROJECT_RIGHT_TRANSPOSE,
+      CoreRules.JOIN_PROJECT_LEFT_TRANSPOSE
+    );
+
+    /** Scan => Filter => Join => Project */
+    public static final List<RelOptRule> CANONICALIZE_RULES_PUSH_FILTER = ImmutableList.of(
+      CoreRules.FILTER_PROJECT_TRANSPOSE,
+      CoreRules.FILTER_MERGE,
+      CoreRules.FILTER_INTO_JOIN,
+      CoreRules.JOIN_CONDITION_PUSH,
+      CoreRules.FILTER_AGGREGATE_TRANSPOSE,
+      CoreRules.PROJECT_MERGE,
+      CoreRules.PROJECT_REMOVE,
+      CoreRules.AGGREGATE_PROJECT_PULL_UP_CONSTANTS,
+      CoreRules.JOIN_PROJECT_RIGHT_TRANSPOSE,
+      CoreRules.JOIN_PROJECT_LEFT_TRANSPOSE
+    );
+
+    /** Scan => Filter => Project => Join */
+    public static final List<RelOptRule> SUBSTITUTE_CANONICALIZE_RULES = ImmutableList.of(
+      CoreRules.FILTER_PROJECT_TRANSPOSE,
+      CoreRules.FILTER_MERGE,
+      CoreRules.FILTER_INTO_JOIN,
+      CoreRules.JOIN_CONDITION_PUSH,
+      CoreRules.FILTER_AGGREGATE_TRANSPOSE,
+      CoreRules.PROJECT_MERGE,
+      CoreRules.PROJECT_REMOVE,
+      CoreRules.PROJECT_JOIN_TRANSPOSE,
+      CoreRules.PROJECT_SET_OP_TRANSPOSE,
+      CoreRules.AGGREGATE_PROJECT_PULL_UP_CONSTANTS
     );
 }
