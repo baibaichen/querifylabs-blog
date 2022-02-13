@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test;
 import static org.apache.calcite.materialize.ModelBuilder.LINEITEM_PART_MODEL;
 
 @Slf4j
-public class SelectModelTest {
+public class SelectModelUsingLatticeTest {
 
     static final String MODEL_SQL =
             "select * from TPCH_01.customer c \n" +

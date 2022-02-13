@@ -166,9 +166,7 @@ class KylinMVTest {
         optimize2(plannerContext2.createParser().rel(sql2).rel, x);
     }
 
-    @Test
-    void testxxx() {
-
+    private static class TPCHTester {
         KylinContext context = new KylinContext() {
             @Override
             public <C> @Nullable C unwrap(Class<C> aClass) {
@@ -176,6 +174,31 @@ class KylinMVTest {
             }
         };
 
+        final KylinHepRuleSetProgram<KylinContext> canonicalizeProgram =
+          KylinHepRuleSetProgram.Builder.of()
+            .add(RuleSets.ofList(KylinRules.CANONICALIZE_RULES_PUSH_FILTER))
+            .setHepRulesExecutionType(KylinHepRuleSetProgram.HEP_RULES_EXECUTION_TYPE.RULE_COLLECTION)
+            .build();
+
+        PlannerContext plannerContext = TPCH.newPlannerContext();
+
+        public RelNode canonicalize(RelNode node) {
+             return canonicalizeProgram.optimize(node, context);
+         }
+
+        public RelNode canonicalize(String sql) {
+            return canonicalizeProgram.optimize(plannerContext.createParser().rel(sql).rel, context);
+        }
+
+         public KylinRelOptMaterialization createMaterialization(String modelSQL) {
+             RelNode queryRel = canonicalize(modelSQL);
+             return KylinMaterializedViewsRegistry
+               .createMaterialization(plannerContext, queryRel, ImmutableList.of("MV", "t1"));
+         }
+    }
+
+    @Test
+    void testSelectModelUsingMVRule() {
         final String MODEL_SQL1 =
           "select * from tpch.customer c \n" +
             "  inner join tpch.orders o   on c.c_custkey = o.o_custkey\n" +
@@ -183,19 +206,50 @@ class KylinMVTest {
             "  inner join tpch.supplier s on l.l_suppkey = s.s_suppkey\n" +
             "  inner join tpch.nation n   on  s.s_nationkey = n.n_nationkey\n" +
             "  inner join tpch.region r   on  n.n_regionkey = r.r_regionkey";
-        PlannerContext plannerContext = TPCH.newPlannerContext();
-        RelNode mvRel = plannerContext.createParser().rel(MODEL_SQL1).rel;
+        final String simpleSQL =
+          "select * from tpch.orders o \n" +
+            "  inner join tpch.customer c on o.o_custkey = c.c_custkey\n" +
+            "  inner join tpch.lineitem l on o.o_orderkey = l.l_orderkey\n" +
+            "  inner join tpch.supplier s on l.l_suppkey = s.s_suppkey\n" +
+            "  inner join tpch.nation n   on  s.s_nationkey = n.n_nationkey\n" +
+            "  inner join tpch.region r   on  n.n_regionkey = r.r_regionkey\n" +
+            "where l.l_orderkey >= o.o_shippriority";
+        final String aggSQL =
+          "select o.o_orderdate, count(*) from tpch.orders o \n" +
+            "  inner join tpch.customer c on o.o_custkey = c.c_custkey\n" +
+            "  inner join tpch.lineitem l on o.o_orderkey = l.l_orderkey\n" +
+            "  inner join tpch.supplier s on l.l_suppkey = s.s_suppkey\n" +
+            "  inner join tpch.nation n   on  s.s_nationkey = n.n_nationkey\n" +
+            "  inner join tpch.region r   on  n.n_regionkey = r.r_regionkey\n" +
+            "where l.l_orderkey >= s.s_suppkey group by o.o_orderdate";
 
-        final KylinHepRuleSetProgram<KylinContext> program =
-          KylinHepRuleSetProgram.Builder.of()
-            .add(RuleSets.ofList(KylinRules.CANONICALIZE_RULES_PUSH_FILTER))
-            .setHepRulesExecutionType(KylinHepRuleSetProgram.HEP_RULES_EXECUTION_TYPE.RULE_COLLECTION)
-            .build();
-
-        RelNode queryRel = program.optimize(mvRel, context);
-
-        KylinRelOptMaterialization x =
-          KylinMaterializedViewsRegistry.createMaterialization(plannerContext, queryRel, ImmutableList.of("MV", "t1"));
+        final String TPCH_05 =
+          "select\n" +
+            "  n.n_name,\n" +
+            "  sum(l.l_extendedprice * (1 - l.l_discount)) as revenue\n" +
+            "from\n" +
+            "  tpch.customer c,\n" +
+            "  tpch.orders o,\n" +
+            "  tpch.lineitem l,\n" +
+            "  tpch.supplier s,\n" +
+            "  tpch.nation n,\n" +
+            "  tpch.region r\n" +
+            "where\n" +
+            "  c.c_custkey = o.o_custkey\n" +
+            "  and l.l_orderkey = o.o_orderkey\n" +
+            "  and l.l_suppkey = s.s_suppkey\n" +
+            "  and c.c_nationkey = s.s_nationkey\n" +
+            "  and s.s_nationkey = n.n_nationkey\n" +
+            "  and n.n_regionkey = r.r_regionkey\n" +
+            "  and r.r_name = 'EUROPE'\n" +
+            "  and o.o_orderdate >= date '1997-01-01'\n" +
+            "  and o.o_orderdate < date '1998-01-01'\n" +
+            "group by\n" +
+            "  n.n_name\n" +
+            "order by\n" +
+            "  revenue desc";
+        TPCHTester tester = new TPCHTester();
+        KylinRelOptMaterialization x = tester.createMaterialization(MODEL_SQL1);
 
         final List<RelOptRule> MATERIALIZATION_RULES = ImmutableList.of(
 //           MaterializedViewRules.FILTER_SCAN
@@ -207,63 +261,21 @@ class KylinMVTest {
 //          , MaterializedViewRules.AGGREGATE
           MaterializedViewRules.JOIN
         );
-        {
-            final String simpleSQL =
-              "select * from tpch.orders o \n" +
-                "  inner join tpch.customer c on o.o_custkey = c.c_custkey\n" +
-                "  inner join tpch.lineitem l on o.o_orderkey = l.l_orderkey\n" +
-                "  inner join tpch.supplier s on l.l_suppkey = s.s_suppkey\n" +
-                "  inner join tpch.nation n   on  s.s_nationkey = n.n_nationkey\n" +
-                "  inner join tpch.region r   on  n.n_regionkey = r.r_regionkey\n" +
-                "where l.l_orderkey >= o.o_shippriority";
-            final String aggSQL =
-              "select o.o_orderdate, count(*) from tpch.orders o \n" +
-                "  inner join tpch.customer c on o.o_custkey = c.c_custkey\n" +
-                "  inner join tpch.lineitem l on o.o_orderkey = l.l_orderkey\n" +
-                "  inner join tpch.supplier s on l.l_suppkey = s.s_suppkey\n" +
-                "  inner join tpch.nation n   on  s.s_nationkey = n.n_nationkey\n" +
-                "  inner join tpch.region r   on  n.n_regionkey = r.r_regionkey\n" +
-                "where l.l_orderkey >= s.s_suppkey group by o.o_orderdate";
 
-            final String TPCH_05 =
-              "select\n" +
-              "  n.n_name,\n" +
-              "  sum(l.l_extendedprice * (1 - l.l_discount)) as revenue\n" +
-              "from\n" +
-              "  tpch.customer c,\n" +
-              "  tpch.orders o,\n" +
-              "  tpch.lineitem l,\n" +
-              "  tpch.supplier s,\n" +
-              "  tpch.nation n,\n" +
-              "  tpch.region r\n" +
-              "where\n" +
-              "  c.c_custkey = o.o_custkey\n" +
-              "  and l.l_orderkey = o.o_orderkey\n" +
-              "  and l.l_suppkey = s.s_suppkey\n" +
-              "  and c.c_nationkey = s.s_nationkey\n" +
-              "  and s.s_nationkey = n.n_nationkey\n" +
-              "  and n.n_regionkey = r.r_regionkey\n" +
-              "  and r.r_name = 'EUROPE'\n" +
-              "  and o.o_orderdate >= date '1997-01-01'\n" +
-              "  and o.o_orderdate < date '1998-01-01'\n" +
-              "group by\n" +
-              "  n.n_name\n" +
-              "order by\n" +
-              "  revenue desc";
-            RelNode rel = program.optimize(plannerContext.createParser().rel(TPCH_05).rel, context);
+        RelNode rel = tester.canonicalize(TPCH_05) ;
 
-            /// optimize2(rel, x);
-            Program program1 = Programs.hep(MATERIALIZATION_RULES, false, DefaultRelMetadataProvider.INSTANCE);
-            log.info("Before :\n {}", Debugger.toString(rel));
-            final RelNode rel2 = program1.run(castNonNull(null), rel, castNonNull(null),
-              ImmutableList.of(x),
-              ImmutableList.of());
-            log.info("    After:\n {}", Debugger.toString(rel2));
-            log.info("After SQL:\n {}", Debugger.toSparkSql(rel2));
-            RelNode simplifiedRel = program.optimize(rel2, context);
-            log.info("    Simplified:\n {}", Debugger.toString(simplifiedRel));
-            log.info("Simplified SQL:\n {}", Debugger.toSparkSql(simplifiedRel));
-        }
+        /// optimize2(rel, x);
+        Program program1 = Programs.hep(MATERIALIZATION_RULES, false, DefaultRelMetadataProvider.INSTANCE);
+        log.info("Before :\n {}", Debugger.toString(rel));
+        final RelNode rel2 = program1.run(castNonNull(null), rel, castNonNull(null),
+          ImmutableList.of(x),
+          ImmutableList.of());
+        log.info("    After:\n {}", Debugger.toString(rel2));
+        log.info("After SQL:\n {}", Debugger.toSparkSql(rel2));
+        RelNode simplifiedRel = tester.canonicalize(rel2);
+        log.info("    Simplified:\n {}", Debugger.toString(simplifiedRel));
+        log.info("Simplified SQL:\n {}", Debugger.toSparkSql(simplifiedRel));
+
     }
 
     /** simulate issue in  {@link SubstitutionVisitor#canonizeNode} */
@@ -280,4 +292,30 @@ class KylinMVTest {
         builder.makeCall(SqlStdOperatorTable.DATETIME_PLUS, right, left);
     }
 
+    @Test
+    void testSelectModelUsingMVRuleOnTPCH_Q8() {
+        final String MODEL_SQL1 =
+          "select * \n" +
+          "from \n" +
+          " tpch.part,\n" +
+          " tpch.supplier,\n" +
+          " tpch.lineitem,\n" +
+          " tpch.orders,\n" +
+          " tpch.customer,\n" +
+          " tpch.nation n1,\n" +
+          " tpch.nation n2,\n" +
+          " tpch.region\n" +
+          "where\n" +
+          "  p_partkey = l_partkey\n" +
+          "  and s_suppkey = l_suppkey\n" +
+          "  and l_orderkey = o_orderkey\n" +
+          "  and o_custkey = c_custkey\n" +
+          "  and c_nationkey = n1.n_nationkey\n" +
+          "  and n1.n_regionkey = r_regionkey\n" +
+          "  and s_nationkey = n2.n_nationkey";
+        TPCHTester tester = new TPCHTester();
+        KylinRelOptMaterialization x = tester.createMaterialization(MODEL_SQL1);
+        log.info("MV Plan :\n {}", Debugger.toString(x.queryRel));
+        log.info(" MV SQL :\n {}", Debugger.toPostgreSQL(x.queryRel));
+    }
 }
