@@ -2,12 +2,20 @@ package org.apache.kylin.test.Resource;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import evolution.org.apache.kylin.meta.KylinMaterializedViewsRegistry;
+import evolution.org.apache.kylin.meta.KylinRelOptMaterialization;
 import org.apache.calcite.adapter.tpch.TpchSchema;
 import org.apache.calcite.jdbc.CalciteSchemaBuilder;
 import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
+import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.schema.Schema;
+import org.apache.calcite.tools.RuleSets;
+import org.apache.kylin.sql.planner.calcite.KylinContext;
 import org.apache.kylin.sql.planner.delegation.PlannerContext;
 import org.apache.kylin.sql.planner.parse.CalciteParser;
+import org.apache.kylin.sql.planner.plan.optimize.program.KylinHepRuleSetProgram;
+import org.apache.kylin.sql.planner.plan.rules.KylinRules;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.List;
 
@@ -705,5 +713,36 @@ public class TPCH {
 
     public static CalciteParser createCalciteParser() {
         return newPlannerContext().createParser();
+    }
+
+    public static class Tester {
+        KylinContext context = new KylinContext() {
+            @Override
+            public <C> @Nullable C unwrap(Class<C> aClass) {
+                return null;
+            }
+        };
+
+        final KylinHepRuleSetProgram<KylinContext> canonicalizeProgram =
+          KylinHepRuleSetProgram.Builder.of()
+            .add(RuleSets.ofList(KylinRules.CANONICALIZE_RULES_PUSH_FILTER))
+            .setHepRulesExecutionType(KylinHepRuleSetProgram.HEP_RULES_EXECUTION_TYPE.RULE_COLLECTION)
+            .build();
+
+        PlannerContext plannerContext = newPlannerContext();
+
+        public RelNode canonicalize(RelNode node) {
+             return canonicalizeProgram.optimize(node, context);
+         }
+
+        public RelNode canonicalize(String sql) {
+            return canonicalizeProgram.optimize(plannerContext.createParser().rel(sql).rel, context);
+        }
+
+         public KylinRelOptMaterialization createMaterialization(String modelSQL) {
+             RelNode queryRel = canonicalize(modelSQL);
+             return KylinMaterializedViewsRegistry
+               .createMaterialization(plannerContext, queryRel, ImmutableList.of("MV", "t1"));
+         }
     }
 }

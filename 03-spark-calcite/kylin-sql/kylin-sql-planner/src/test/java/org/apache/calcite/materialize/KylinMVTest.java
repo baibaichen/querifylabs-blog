@@ -40,20 +40,15 @@ import org.apache.calcite.sql.SqlIntervalQualifier;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.tools.Program;
-import org.apache.calcite.tools.RuleSets;
 import org.apache.calcite.util.DateString;
-import org.apache.kylin.sql.planner.calcite.KylinContext;
 import org.apache.kylin.sql.planner.delegation.PlannerContext;
 import org.apache.kylin.sql.planner.plan.nodes.KylinTableScan;
 import org.apache.kylin.sql.planner.plan.nodes.LogicalSpark;
-import org.apache.kylin.sql.planner.plan.optimize.program.KylinHepRuleSetProgram;
-import org.apache.kylin.sql.planner.plan.rules.KylinRules;
 import org.apache.kylin.test.RelNodeAssert;
 import org.apache.kylin.test.Resource.TPCH;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.tools.Programs;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.assertj.core.api.Assertions;
@@ -166,37 +161,6 @@ class KylinMVTest {
         optimize2(plannerContext2.createParser().rel(sql2).rel, x);
     }
 
-    private static class TPCHTester {
-        KylinContext context = new KylinContext() {
-            @Override
-            public <C> @Nullable C unwrap(Class<C> aClass) {
-                return null;
-            }
-        };
-
-        final KylinHepRuleSetProgram<KylinContext> canonicalizeProgram =
-          KylinHepRuleSetProgram.Builder.of()
-            .add(RuleSets.ofList(KylinRules.CANONICALIZE_RULES_PUSH_FILTER))
-            .setHepRulesExecutionType(KylinHepRuleSetProgram.HEP_RULES_EXECUTION_TYPE.RULE_COLLECTION)
-            .build();
-
-        PlannerContext plannerContext = TPCH.newPlannerContext();
-
-        public RelNode canonicalize(RelNode node) {
-             return canonicalizeProgram.optimize(node, context);
-         }
-
-        public RelNode canonicalize(String sql) {
-            return canonicalizeProgram.optimize(plannerContext.createParser().rel(sql).rel, context);
-        }
-
-         public KylinRelOptMaterialization createMaterialization(String modelSQL) {
-             RelNode queryRel = canonicalize(modelSQL);
-             return KylinMaterializedViewsRegistry
-               .createMaterialization(plannerContext, queryRel, ImmutableList.of("MV", "t1"));
-         }
-    }
-
     static final List<RelOptRule> MATERIALIZATION_RULES = ImmutableList.of(
 //           MaterializedViewRules.FILTER_SCAN
 //          , MaterializedViewRules.PROJECT_FILTER
@@ -258,11 +222,15 @@ class KylinMVTest {
             "  n.n_name\n" +
             "order by\n" +
             "  revenue desc";
-        TPCHTester tester = new TPCHTester();
+        TPCH.Tester tester = new TPCH.Tester();
         KylinRelOptMaterialization x = tester.createMaterialization(MODEL_SQL1);
 
         RelNode rel = tester.canonicalize(TPCH_05) ;
         log.info("Before :\n {}", Debugger.toString(rel));
+
+        RelOptPredicateList all = rel.getCluster().getMetadataQuery().getAllPredicates(rel);
+        RelOptPredicateList p = rel.getCluster().getMetadataQuery().getPulledUpPredicates(rel);
+
 
         /// optimize2(rel, x);
         Program program1 = Programs.hep(MATERIALIZATION_RULES, false, DefaultRelMetadataProvider.INSTANCE);
@@ -313,7 +281,7 @@ class KylinMVTest {
           "  and c_nationkey = n1.n_nationkey\n" +
           "  and n1.n_regionkey = r_regionkey\n" +
           "  and s_nationkey = n2.n_nationkey";
-        TPCHTester tester = new TPCHTester();
+        TPCH.Tester tester = new TPCH.Tester();
         KylinRelOptMaterialization x = tester.createMaterialization(MODEL_SQL1);
         log.info("MV Plan :\n {}", Debugger.toString(x.queryRel));
         log.info(" MV SQL :\n {}", Debugger.toPostgreSQL(x.queryRel));
