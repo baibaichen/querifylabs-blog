@@ -29,7 +29,7 @@ public enum PlannerPhase {
             return hep(getRules(ctx));
         }
     },
-    DECORRELATE (""){
+    DECORRELATE(""){
         public Program getProgram(Object ctx) {
             return hep(getRules(ctx));
         }
